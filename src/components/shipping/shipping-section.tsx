@@ -8,14 +8,19 @@ import { motion } from "framer-motion";
 
 // Core capabilities array. Add any new capability label here anytime.
 const SHIP_LABELS: string[] = [
-  "gateway",
-  "memory",
-  "terminal execution",
-  "tool permissions",
-  "mcp",
-  "background task",
-  "skill",
+  "Gateway",
+  "Memory",
+  "Tool Execution",
+  "Permissions",
+  "Background Tasks",
+  "Skills",
+  "SubAgents",
+  "MCP",
+  "Context Compression",
+  "Tool Pruning",
   "AGENTS.md",
+  "SOUL.md",
+  "Diff Preview",
   "Theming",
 ];
 
