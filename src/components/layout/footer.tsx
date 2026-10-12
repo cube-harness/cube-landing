@@ -31,7 +31,7 @@ export function Footer() {
             Showcase
           </a>
           <a href="#ship" className="hover:text-[#F5F5F4] transition-colors">
-            Install
+            Ship
           </a>
           <a href="#faq" className="hover:text-[#F5F5F4] transition-colors">
             FAQ

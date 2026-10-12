@@ -16,7 +16,7 @@ const NAV_SECTIONS: NavSection[] = [
   { id: "hero", label: "Overview", roman: "I" },
   { id: "harness", label: "Harness", roman: "II" },
   { id: "demo", label: "Showcase", roman: "III" },
-  { id: "ship", label: "Install", roman: "IV" },
+  { id: "ship", label: "Ship", roman: "IV" },
   { id: "faq", label: "FAQ", roman: "V" },
 ];
 
