@@ -107,7 +107,7 @@ export function Hero() {
           </a>
           <a
             href="#demo"
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#0D0C0A]/90 border border-[#2A2622] hover:border-[#3E3833] text-[#D6D3D1] hover:text-[#F5F5F4] text-xs sm:text-sm font-medium transition-all backdrop-blur-sm"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-sm bg-[#0D0C0A]/90 border border-[#2A2622] hover:border-[#38BDF8]/60 text-[#F5F5F4] text-xs sm:text-sm font-medium transition-all backdrop-blur-sm"
           >
             <FileText className="w-4 h-4 text-[#A8A29E]" />
             <span>Watch Terminal Demos</span>
