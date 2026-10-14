@@ -25,4 +25,4 @@ The website renders these Markdown sources at build time. Each guide also offers
 | Configuration | [Read guide](/docs/configuration) | [configuration.md](/docs/configuration.md) |
 | Troubleshooting | [Read guide](/docs/troubleshooting) | [troubleshooting.md](/docs/troubleshooting.md) |
 
-The documentation covers Cube 0.1.8. Configuration defaults and examples were checked against the Cube source; omitted supported settings use Cube defaults. Credentials, workspace permissions and MCP connections belong in their separate home files, not config.yaml.
+The documentation covers Cube 0.1.13. Configuration defaults and examples were checked against the Cube source; omitted supported settings use Cube defaults. Credentials, workspace permissions and MCP connections belong in their separate home files, not config.yaml.

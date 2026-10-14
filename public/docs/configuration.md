@@ -6,7 +6,7 @@ The complete config.yaml reference, plus the separate files that own credentials
 
 ## Home Directory & File Ownership
 
-Cube's default home is ~/.cube (C:\Users\`<user>`\.cube on Windows). Application updates preserve it. Avoid committing credentials or databases to your project.
+Cube's default home is ~/.cube. Application updates preserve it. Avoid committing credentials or databases to your project.
 
 | File / directory | Responsibility |
 | --- | --- |
@@ -32,7 +32,7 @@ Gateway/model have no built-in value: onboarding must obtain a runnable choice. 
 
 Title, compaction and durable memory each accept an optional reasoning_effort. An explicit value overrides the parent effort. When omitted, model: inherit captures the active parent's reasoning options; a separately selected model uses its provider defaults. Use default explicitly to avoid inheriting the parent's effort. SQLite local storage and its database path are fixed internally, not YAML options.
 
-Interactive commands save their own supported settings and apply them immediately. For hand-written startup settings, restart Cube. /reload reloads instruction snapshots, the custom-agent catalog and MCP configuration; it is not a generic live reload of all config.yaml fields.
+Interactive commands save their own supported settings and apply them immediately. For hand-written startup settings, restart Cube. /reload refreshes instruction/durable-memory snapshots, the custom-agent catalog and MCP configuration, and applies memory.durable.retrieval plus local embedding endpoint edits. It does not hot-apply chat model, reasoning, background scheduling or every other config.yaml field, and it does not rebuild the skill-source directory list.
 
 Examples on feature pages are partial blocks. Merge them into existing YAML mappings instead of duplicating a memory or subagents key. Credentials go in auth.json via /gateway; permissions stay in permission.json and connections in mcp.json.
 
@@ -79,14 +79,6 @@ The table below includes every currently supported leaf field, including optiona
 | `memory.durable.min_idle_hours` | Finite number: 0–720 | `6` | Minimum source-thread inactivity before memory extraction is eligible. 0 removes the age requirement; other safety/size checks still apply. | [Related guide](/docs/memory-sessions) |
 | `memory.durable.retrieval.enabled` | Boolean | `false` | Enable embeddings/hybrid retrieval. BM25 remains the fallback when no usable index/chunks exist or embeddings fail; committed chunks can be searched while other chunks are indexing. | [Related guide](/docs/memory-sessions) |
 | `memory.durable.retrieval.model` | Concrete provider/model or null | `null` | Required when retrieval is enabled. Use a supported API-key provider, ollama or lmstudio. OAuth and inherit are not embedding choices. | [Related guide](/docs/memory-sessions) |
-| `memory.durable.retrieval.revision` | Non-empty string ≤256 chars or null | `null` | Change this when an embedding model alias changes weights without changing its ID, so Cube rebuilds the project's embedding generation. | [Related guide](/docs/memory-sessions) |
-| `memory.durable.retrieval.dimensions` | Integer: 1–65,536 or null | `null` | Optional requested embedding dimensions when supported by the provider. null leaves dimensions provider-defined; changing them rebuilds the index. | [Related guide](/docs/memory-sessions) |
-| `memory.durable.retrieval.document_prefix` | String ≤512 chars | `""` | Text prepended to documents for models requiring task prefixes, such as Nomic's search_document: . Part of the embedding profile. | [Related guide](/docs/memory-sessions) |
-| `memory.durable.retrieval.query_prefix` | String ≤512 chars | `""` | Text prepended to retrieval queries, such as Nomic's search_query: . Part of the embedding profile. | [Related guide](/docs/memory-sessions) |
-| `memory.durable.retrieval.provider_options.document` | JSON object | `{}` | Provider-specific document embedding options. Combined provider_options must fit 16 KiB and cannot contain credentials, headers, endpoint or input-payload overrides, even nested. | [Related guide](/docs/memory-sessions) |
-| `memory.durable.retrieval.provider_options.query` | JSON object | `{}` | Provider-specific query embedding options, subject to the same 16 KiB and safety constraints. Keep provider-required document/query task options distinct. | [Related guide](/docs/memory-sessions) |
-| `memory.durable.retrieval.chunk.max_chars` | Integer: 128–16,384 | `1024` | Embedding chunk size in characters, not tokens. Chunks respect project ownership and Markdown memory structure. | [Related guide](/docs/memory-sessions) |
-| `memory.durable.retrieval.chunk.overlap_chars` | Non-negative integer <max_chars | `128` | Chunk overlap in characters. Must remain smaller than max_chars; changing chunk settings rebuilds affected index data. | [Related guide](/docs/memory-sessions) |
 
 <a id="example"></a>
 
@@ -149,14 +141,4 @@ memory:
     retrieval:
       enabled: false
       model: null
-      revision: null
-      dimensions: null
-      document_prefix: ""
-      query_prefix: ""
-      provider_options:
-        document: {}
-        query: {}
-      chunk:
-        max_chars: 1024
-        overlap_chars: 128
 ```

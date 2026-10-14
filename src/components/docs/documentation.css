@@ -59,6 +59,9 @@
 .docs-code-toolbar button:hover { text-decoration: underline; }
 .docs-code-toolbar button:focus-visible { outline: 1px solid var(--primary); outline-offset: 2px; }
 .docs-code-toolbar button:disabled { cursor: wait; opacity: 0.6; }
+.docs-code-toolbar .docs-copied-icon { display: none; }
+.docs-code-toolbar button[data-copied="true"] .docs-copy-icon { display: none; }
+.docs-code-toolbar button[data-copied="true"] .docs-copied-icon { display: block; }
 .docs-prose pre {
   margin: 0;
   padding: 1rem;
@@ -67,18 +70,25 @@
   line-height: 1.7;
 }
 .docs-prose pre code { font-size: 0.875rem; color: var(--text-primary); }
+.docs-prose :is(.language-yaml, .language-yml) .hljs-string { color: #e3b341; }
+.docs-prose :is(.language-yaml, .language-yml) .hljs-number,
+.docs-prose :is(.language-yaml, .language-yml) .hljs-literal { color: #d2a8ff; }
 .docs-prose blockquote { margin: 1rem 0; border-left: 2px solid var(--primary); padding-left: 1rem; }
 
-.docs-prose table {
-  display: block;
+.docs-table {
   margin: 1.25rem 0;
-  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.docs-prose table {
+  width: auto;
   border: 1px solid var(--border);
   border-collapse: collapse;
-  overflow-x: auto;
+  overflow-wrap: normal;
+  word-break: normal;
   font-size: 0.875rem;
   text-align: left;
 }
-.docs-prose th { background: var(--surface); color: var(--text-primary); font-weight: 500; }
+.docs-prose th { background: var(--surface); color: var(--text-primary); font-weight: 500; white-space: nowrap; }
 .docs-prose th, .docs-prose td { border-bottom: 1px solid var(--border); padding: 0.75rem 1rem; vertical-align: top; }
-.docs-prose table code { font-size: 0.75rem; }
+.docs-prose table code { font-size: 0.75rem; white-space: nowrap; }

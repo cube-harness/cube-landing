@@ -43,13 +43,21 @@ subagents:
 
 ## Custom Agent Markdown
 
-Create role files in ~/.cube/agents, `<workspace>`/.agents/agents or `<workspace>`/.cube/agents, then /reload. Later project definitions take precedence over same-named global roles. The filename defines the role/tool name: lowercase, starting with a letter, using letters/digits/_/-, at most 57 characters.
+`<workspace>` is the directory where Cube was started. Custom roles are individual Markdown files, not skill directories. Supported sources are:
+
+- **Global:** `~/.cube/agents/<role>.md`, available across workspaces.
+- **Project:** `<workspace>/.agents/agents/<role>.md` and `<workspace>/.cube/agents/<role>.md`, available only in that workspace.
+- **Built-in:** explore and worker, supplied by Cube; these reserved roles cannot be replaced by user Markdown.
+
+For a custom name, precedence is project .cube/agents over project .agents/agents over global ~/.cube/agents. The winning file replaces the whole role definition; fields from shadowed files are not merged. An invalid winning file makes that custom role unavailable rather than falling back to a lower-priority file. Cube does not discover roles from ~/.agents/agents, .claude/agents, .codex/agents or an agents subfolder inside a skill.
+
+Create or edit a role file, then run /reload to refresh the role catalog; restarting Cube also reloads it. The filename defines the role/tool name: lowercase, starting with a letter, using letters/digits/_/-, at most 57 characters.
 
 description and non-empty Markdown instructions are required. The other fields below are optional. tools is an allowlist; disallowedTools removes tools. skills limits which skills are permitted, not an instruction to activate them all. mcpServers limits server access. Unknown fields are rejected.
 
 Choose an actually available provider/model before setting a model override. Overrides resolve within the parent's gateway strategy; the model field does not add credentials or switch to an unrelated strategy. A role cannot bypass workspace policy or gain recursive delegation simply by declaring a skill.
 
-**.agents/agents/reviewer.md**
+**Project example: `<workspace>/.agents/agents/reviewer.md` — use `~/.cube/agents/reviewer.md` for a global role**
 
 ```markdown
 ---

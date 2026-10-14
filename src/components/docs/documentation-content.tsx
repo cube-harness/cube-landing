@@ -9,13 +9,17 @@ export function DocumentationContent({ html, codeBlocks }: { html: string; codeB
     if (!button || !event.currentTarget.contains(button) || button.disabled) return;
     const code = codeBlocks[Number(button.dataset.copyCode)];
     if (code === undefined) return;
+    const status = button.querySelector<HTMLElement>("[data-copy-status]");
     button.disabled = true;
     try {
       await navigator.clipboard.writeText(code);
-      button.textContent = "Copied";
+      button.dataset.copied = "true";
+      if (status) status.textContent = "Copied";
     } catch {
-      button.textContent = "Copy failed — retry";
+      delete button.dataset.copied;
+      if (status) status.textContent = "Copy failed — retry";
     } finally {
+      button.title = status?.textContent ?? "Copy code";
       button.disabled = false;
     }
   }

@@ -19,7 +19,7 @@ Type / at the start of the prompt to open autocomplete. Commands operate on Cube
 | `/rename <title>` | Rename the active conversation. |
 | `/delete [thread-id]` | Choose a saved conversation to delete, or specify its ID. |
 | `/init` | Ask the model to create or update project AGENTS.md. |
-| `/reload` | Reload project instruction snapshots, custom-agent catalog and MCP configuration. |
+| `/reload` | Reload instruction/memory snapshots, custom-agent catalog, MCP configuration and memory retrieval settings. Not a generic config reload. |
 | `/compact` | Request a continuation summary if threshold and safe-cut checks pass. |
 | `/status` · `/usage` | Show session usage and provider-reported OAuth limits. |
 | `/skills` | Enable or disable discovered skills. |

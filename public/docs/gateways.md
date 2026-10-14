@@ -24,7 +24,7 @@ Switching strategies does not delete credentials for the other strategies. Do no
 
 Supported provider IDs are google, openai, anthropic, xai, deepseek, moonshotai, openrouter, mistral, nvidia, zai, zai-coding-plan, alibaba, alibaba-coding-plan, huggingface, and groq. Their gateway IDs use api_key/`<provider>`.
 
-You can configure several API-key providers at once; the API-key catalog includes the configured providers. Cube passes saved credentials to the model gateway at runtime. You do not need to export provider keys in .env for normal use.
+You can save keys for several providers at once. Their catalog cache entries remain separate; /model currently lists the selected API-key provider, not a merged list of every saved key. Use /gateway to switch providers. Cube passes saved credentials to the model gateway at runtime; you do not need to export provider keys in .env for normal use.
 
 A saved key is not proof of remaining credits or model access. An actual model request can still return authentication, quota, billing, or rate-limit errors. Ctrl+D on a provider removes its credential and corresponding catalog entries without clearing other strategies.
 

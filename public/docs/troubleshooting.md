@@ -26,7 +26,9 @@ For missing OAuth models, check the account, selected provider and model catalog
 
 Open /mcp to read a server's error. Verify command/PATH, cwd, endpoint, required headers and provider authorization; then Restart that server. Use /reload after modifying mcp.json. If tool names collide, configure a different server/tool set rather than expecting a silent override.
 
-For missing skills, inspect /skills for source/path and enabled state. SKILL.md needs valid YAML frontmatter and a name matching its directory. Editing a malformed skill does not require altering Cube's dependencies. Skills and project instructions have different refresh/snapshot lifecycles.
+For missing skills, inspect /skills for source/path and enabled state. SKILL.md needs valid YAML frontmatter and a name matching its directory. Use the [documented project/global sources](/docs/skills#sources); a new project source directory absent at startup requires restarting Cube. Native refresh has a cooldown, so a newly added skill is not guaranteed to appear immediately. Resolve same-name ambiguity by renaming or disabling the unwanted source. Editing a malformed skill does not require altering Cube's dependencies.
+
+For custom subagents, use the separate [role directories](/docs/subagents#custom-agents) and /reload. A role inside a skill's agents folder is not discovered. For project instructions, use [AGENTS.md locations](/docs/instructions#agents); CLAUDE.md is not automatically loaded by Cube's active snapshot loader.
 
 <a id="jobs"></a>
 

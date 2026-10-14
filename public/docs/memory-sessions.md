@@ -64,7 +64,7 @@ Enable memory.durable.retrieval with a concrete embedding model to combine BM25 
 
 Cube embeds only the current project's committed handbook and rollout entries, not raw/index entries or the entire SQLite transcript. It chunks structured Markdown sections rather than embedding shared files indiscriminately. Enabling retrieval starts background indexing. With no usable current-profile chunks, search falls back to BM25; once batches are committed, those valid chunks can participate in hybrid search while remaining chunks continue indexing.
 
-Memory edits re-embed only changed inputs; stale/deleted entries are filtered out. Changing the embedding model/profile, dimensions, prefixes or chunk settings requires a new index generation for this project. Vectors from different models/dimensions cannot be mixed. Changing revision forces a rebuild when an alias silently changes its weights.
+Memory edits re-embed only changed inputs; stale/deleted entries are filtered out. Changing the model ID or local endpoint automatically creates a new index generation for this project. Cube also invalidates indexes when its internal embedding policy changes. Vectors from different generations cannot be mixed. A provider silently replacing weights behind the same model ID cannot be detected from that ID alone.
 
 Completed indexing batches survive /exit and can be resumed; the active indexing worker is stopped at shutdown. BM25 remains available if embeddings are interrupted or the provider fails. API indexing adds request cost; local indexing uses machine resources.
 
@@ -74,16 +74,12 @@ The retrieval fields control two separate operations: document embedding during 
 | --- | --- |
 | enabled | false uses BM25 without embedding calls; true enables background indexing and hybrid search when valid vectors are available. Durable memory must also be enabled. |
 | model | Concrete embedding model, independent of the chat gateway/model. API credentials come from auth.json; local endpoints come from gateway_options. |
-| revision | Cube-only version label, not sent to the provider. Change it to invalidate vectors after an alias silently changes model weights. |
-| dimensions | Requested vector length, when supported. More dimensions consume more index space; fewer dimensions can trade retrieval quality for size. null uses the model default. |
-| document_prefix | Text prepended to each memory chunk before embedding, for models that require document-task prefixes. Not an instruction injected into chat. |
-| query_prefix | Text prepended to the search query before embedding, for query-task prefixes. Not a keyword appended to BM25 search. |
-| provider_options.document | Namespaced native provider options for document embedding only. Leave {} unless the model requires specific options. |
-| provider_options.query | Namespaced native provider options for query embedding only. Keep query/document task options separate. |
-| chunk.max_chars | Maximum characters in each embedding chunk, not tokens. Smaller chunks are more focused but produce more vectors; larger chunks retain more neighboring context. |
-| chunk.overlap_chars | Characters shared across chunk boundaries to avoid losing context at a cut. More overlap increases duplicated embedding input. Must be smaller than max_chars. |
 
-In the current implementation, the whole retrieval configuration and endpoint identify the embedding profile. Changing even query_prefix or query options creates a new project index generation; it is not limited to changes in model or dimensions. Credentials, headers, endpoint overrides and custom input payloads are forbidden inside provider_options; the combined options must fit 16 KiB. Omitted prefixes stay empty, so do not copy Nomic prefixes onto unrelated models.
+Cube owns the embedding policy, not config.yaml. It uses provider-default vector dimensions and preserves each Markdown section when it fits the input budget. Only oversized sections are split, with their heading/status retained in each fragment. The byte budget is conservative: native model input limits where available, known family limits otherwise, and a 2K fallback for unknown models, with a safety reserve. There is no universal tokenizer guarantee; rejected inputs fall back to BM25.
+
+Task formatting is model-specific: Nomic uses search_document/search_query, standard E5 uses passage/query, supported Google embedding models use native retrieval task types, and Gemini Embedding 2 uses its text task format instead. Unknown models receive plain text, not guessed prefixes. Embedding errors do not block the chat turn.
+
+This policy recognizes specific model IDs; it does not discover every model's required task instruction. Renamed local models and unsupported model families may not be recognized. Successful vector generation does not prove optimal retrieval quality; missing required task formatting can reduce quality without an API error. After editing retrieval.enabled/model or the local embedding endpoint in config.yaml, use /reload to apply the new retrieval profile; this does not change the chat model.
 
 **config.yaml · Ollama Nomic example**
 
@@ -94,16 +90,6 @@ memory:
     retrieval:
       enabled: true
       model: ollama/nomic-embed-text:latest
-      revision: null
-      dimensions: null
-      document_prefix: "search_document: "
-      query_prefix: "search_query: "
-      provider_options:
-        document: {}
-        query: {}
-      chunk:
-        max_chars: 1024
-        overlap_chars: 128
 ```
 
 <a id="related-config"></a>
@@ -124,11 +110,3 @@ Settings related to this guide. Merge examples into your existing file; omitted 
 | `memory.durable.min_idle_hours` | Finite number: 0–720 | `6` | Minimum source-thread inactivity before memory extraction is eligible. 0 removes the age requirement; other safety/size checks still apply. |
 | `memory.durable.retrieval.enabled` | Boolean | `false` | Enable embeddings/hybrid retrieval. BM25 remains the fallback when no usable index/chunks exist or embeddings fail; committed chunks can be searched while other chunks are indexing. |
 | `memory.durable.retrieval.model` | Concrete provider/model or null | `null` | Required when retrieval is enabled. Use a supported API-key provider, ollama or lmstudio. OAuth and inherit are not embedding choices. |
-| `memory.durable.retrieval.revision` | Non-empty string ≤256 chars or null | `null` | Change this when an embedding model alias changes weights without changing its ID, so Cube rebuilds the project's embedding generation. |
-| `memory.durable.retrieval.dimensions` | Integer: 1–65,536 or null | `null` | Optional requested embedding dimensions when supported by the provider. null leaves dimensions provider-defined; changing them rebuilds the index. |
-| `memory.durable.retrieval.document_prefix` | String ≤512 chars | `""` | Text prepended to documents for models requiring task prefixes, such as Nomic's search_document: . Part of the embedding profile. |
-| `memory.durable.retrieval.query_prefix` | String ≤512 chars | `""` | Text prepended to retrieval queries, such as Nomic's search_query: . Part of the embedding profile. |
-| `memory.durable.retrieval.provider_options.document` | JSON object | `{}` | Provider-specific document embedding options. Combined provider_options must fit 16 KiB and cannot contain credentials, headers, endpoint or input-payload overrides, even nested. |
-| `memory.durable.retrieval.provider_options.query` | JSON object | `{}` | Provider-specific query embedding options, subject to the same 16 KiB and safety constraints. Keep provider-required document/query task options distinct. |
-| `memory.durable.retrieval.chunk.max_chars` | Integer: 128–16,384 | `1024` | Embedding chunk size in characters, not tokens. Chunks respect project ownership and Markdown memory structure. |
-| `memory.durable.retrieval.chunk.overlap_chars` | Non-negative integer <max_chars | `128` | Chunk overlap in characters. Must remain smaller than max_chars; changing chunk settings rebuilds affected index data. |

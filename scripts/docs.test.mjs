@@ -25,7 +25,7 @@ test("Markdown is the complete docs source and preserves navigation/config cover
   const table = new Marked().lexer(configuration.markdown).find((token) =>
     token.type === "table" && token.header[0].text === "Field");
   assert.ok(table);
-  assert.equal(table.rows.length, 43, "Update coverage when Cube's config schema changes");
-  assert.equal(new Set(table.rows.map((row) => row[0].text)).size, 43);
+  assert.equal(table.rows.length, 35, "Update coverage when Cube's config schema changes");
+  assert.equal(new Set(table.rows.map((row) => row[0].text)).size, 35);
   for (const page of docs) assert.ok(overview.markdown.includes(`/docs/${page.slug}.md`));
 });

@@ -56,6 +56,6 @@ Explain the main components of this project.
 
 ## Updates
 
-When startup finds a newer published release, choose Update to install it and restart, Continue to use the current version, or Cancel to exit. User configuration and history under ~/.cube are preserved when old application versions are removed.
+When startup finds a newer published release, choose Update to install it and restart, Skip to use the current version, or Cancel to exit. User configuration and history under ~/.cube are preserved when old application versions are removed.
 
 If cube is not found after installation, open a new terminal so PATH changes are picked up. For Linux/WSL, ensure ~/.local/bin is on PATH. Cube's release version comes from the published application; the npm wrapper's package version is separate.

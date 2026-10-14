@@ -21,9 +21,11 @@ soul:
 
 ## Project AGENTS.md
 
-Put project-specific conventions, build/test commands, architecture and constraints in AGENTS.md. Cube loads applicable ancestor instructions between the current directory and workspace root, plus root .agents/AGENTS.md, .cube/AGENTS.md, .claude/AGENTS.md and .codex/AGENTS.md. ~/.cube/AGENTS.md supplies global guidance.
+Put project-specific conventions, build/test commands, architecture and constraints in AGENTS.md. Cube currently treats the directory where it was started as the workspace root; it does not automatically climb to a Git root or load instructions above that boundary. Startup reads `<workspace>/AGENTS.md` plus `<workspace>/.agents/AGENTS.md`, `<workspace>/.cube/AGENTS.md`, `<workspace>/.claude/AGENTS.md` and `<workspace>/.codex/AGENTS.md`. `~/.cube/AGENTS.md` supplies global guidance across workspaces. Nested AGENTS.md files are discovered separately when their paths are touched.
 
-Project instructions are sent as a clearly delimited user-context block after system instructions, not as an extra question and not as a user-visible chat message. Their source and scope are included. More specific project scopes win over parent/global conflicts; non-conflicting guidance remains applicable.
+The .claude directory is a supported location, but the automatically loaded filename is still AGENTS.md. Cube's active loader does not auto-load CLAUDE.md or CONTEXT.md. Mastra ships a separate injector that recognizes those filenames, but Cube does not attach it; manually reading such a file with a tool is not the same as registering it in Cube's instruction snapshot.
+
+Project instructions are sent as a clearly delimited user-context block after system instructions, not as an extra question and not as a user-visible chat message. Their source and scope are included. More specific project scopes win over parent/global conflicts; non-conflicting guidance remains applicable. Equal-scope files are additive; the model is told to ask about unresolved conflicts rather than assume folder order overrides them.
 
 The startup info box shows the loaded files and character counts. A missing AGENTS.md is normal; it is not fabricated or required to start a conversation.
 
@@ -43,7 +45,7 @@ Editing an existing AGENTS.md, or creating one in an already checked scope, does
 
 /init submits Cube's project-initialization instructions to the model instead of making you type them. It asks the agent to inspect the project and create or update AGENTS.md; normal tool approvals still apply. The hidden initialization prompt is not rendered as a long user message in the TUI.
 
-After the file is created, run /reload to adopt its contents in the current conversation. /reload also refreshes custom-agent definitions and MCP configuration. It is not a promise to hot-apply every startup setting in config.yaml, and it is not the same as restarting a running MCP server.
+After the file is created, run /reload to adopt its contents in the current conversation. /reload refreshes SOUL/project instructions and committed durable-memory snapshots, the custom-agent catalog, MCP configuration, and memory retrieval settings/local embedding endpoints. It does not rebuild skill-source directories or hot-apply every startup setting in config.yaml, and it is not the same as restarting a running MCP server.
 
 **Cube**
 
