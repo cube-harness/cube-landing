@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 import { Artwork } from "@/components/visual/artwork";
 import { FileText, ChevronDown } from "lucide-react";
 import { InstallBox } from "./install-box";
@@ -105,13 +106,13 @@ export function Hero() {
             <GithubIcon className="w-4 h-4 text-[#A8A29E]" />
             <span>View on GitHub</span>
           </a>
-          <a
-            href="#demo"
+          <Link
+            href="/docs"
             className="flex items-center gap-2 px-5 py-2.5 rounded-sm bg-[#0D0C0A]/90 border border-[#2A2622] hover:border-[#38BDF8]/60 text-[#F5F5F4] text-xs sm:text-sm font-medium transition-all backdrop-blur-sm"
           >
             <FileText className="w-4 h-4 text-[#A8A29E]" />
-            <span>Watch Terminal Demos</span>
-          </a>
+            <span>View Docs</span>
+          </Link>
         </motion.div>
 
         {/* Install box */}
