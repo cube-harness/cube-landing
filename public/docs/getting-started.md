@@ -34,7 +34,7 @@ pnpm add -g @cube-harness/cli
 
 ## First Run & Onboarding
 
-Open a terminal in the project you want Cube to work on and run cube. Cube creates its home files when missing. The startup flow checks for an application update, asks you to trust a previously untrusted workspace, then asks for a gateway/model only if the saved configuration is not sufficient to run.
+Open a terminal in the project you want Cube to work on and run cube. Cube creates its home files when missing. An installed release checks for an application update, asks you to trust a previously untrusted workspace, then asks for a gateway/model only if the saved configuration is not sufficient to run. Development runs do not use the installed-release updater.
 
 Trust is stored per workspace in permission.json. Declining or cancelling the trust prompt exits without saving a rejection. Trusting a project does not automatically approve every command or file edit.
 

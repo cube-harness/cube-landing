@@ -4,7 +4,7 @@ From your first workspace to tool approvals, delegated work and long-running con
 
 [Get started →](/docs/getting-started)
 
-The website renders these Markdown sources at build time. Each guide also offers **Copy Markdown** and **View raw Markdown**. Agents can fetch the raw links below without parsing the website layout.
+The website renders these Markdown sources at build time. Each guide also offers **Copy Markdown** and **View raw Markdown**. Agents can fetch the raw links below without parsing the website layout. In Cube, use `$cube-docs` for documentation questions; the built-in skill reads the relevant online guide and does not bundle or inject the whole documentation set.
 
 ## Guides
 
@@ -25,4 +25,4 @@ The website renders these Markdown sources at build time. Each guide also offers
 | Configuration | [Read guide](/docs/configuration) | [configuration.md](/docs/configuration.md) |
 | Troubleshooting | [Read guide](/docs/troubleshooting) | [troubleshooting.md](/docs/troubleshooting.md) |
 
-The documentation covers Cube 0.1.13. Configuration defaults and examples were checked against the Cube source; omitted supported settings use Cube defaults. Credentials, workspace permissions and MCP connections belong in their separate home files, not config.yaml.
+This reference follows the current Cube source. Online documentation may be newer than your installed release; include your Cube version when investigating a discrepancy. Omitted supported settings use Cube defaults. Credentials, workspace permissions and MCP connections belong in their separate home files, not config.yaml.

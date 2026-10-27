@@ -18,7 +18,7 @@ Cube's default home is ~/.cube. Application updates preserve it. Avoid committin
 | model-catalog.json | Discovered capabilities, grouped by gateway strategy/provider. |
 | skills/ / agents/ | User-defined global skills and custom subagent roles. |
 | memories/memory.sqlite | Conversations, native child history and context checkpoints. |
-| memories/*.md / memories/rollout_summaries/ | Structured durable project memory and evidence. |
+| memories/*.md / memories/rollout_summaries/ | Structured durable project memory and evidence; see [file examples](/docs/memory-sessions#memory-files). |
 | logs/threads/ | Thread-scoped diagnostic/error logs. |
 | cache/ | Disposable derived data such as pet frames, retrieval indexes and temporary tool output. |
 

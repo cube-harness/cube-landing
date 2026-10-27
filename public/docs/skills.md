@@ -10,7 +10,7 @@ A skill is a directory containing SKILL.md with YAML frontmatter and Markdown in
 
 - **Project:** `<workspace>/.agents/skills/<name>/SKILL.md`, `<workspace>/.cube/skills/<name>/SKILL.md`, `<workspace>/.claude/skills/<name>/SKILL.md` and `<workspace>/.codex/skills/<name>/SKILL.md`. These skills belong to that workspace, not every project on your machine.
 - **Global:** `~/.cube/skills/<name>/SKILL.md` and `~/.agents/skills/<name>/SKILL.md`. These are available across workspaces.
-- **Built-in:** Cube's packaged application assets, including skill-creator, cube-background, cube-delegation and cube-memory. This is not a destination for your own skill files.
+- **Built-in:** Cube's packaged application assets, including skill-creator, cube-background, cube-delegation, cube-memory and cube-docs. This is not a destination for your own skill files.
 
 In the current implementation, an enabled global skill wins over a same-named project skill during activation. Enabled user skills shadow built-ins. Do not assume project-over-global precedence; use distinct names or disable the unwanted source in /skills. Multiple distinct same-named skills within one level can be ambiguous to the native loader rather than resolved by folder order. /skills shows source/path information. Invalid YAML or metadata makes the affected skill unavailable; check logs and the file.
 
@@ -51,7 +51,7 @@ skills:
 
 ## Creating Skills
 
-Cube includes skill-creator, cube-background, cube-delegation and cube-memory. Activate skill-creator for the authoring workflow, validation and supporting assets instead of copying an unrelated agent's skill format blindly.
+Cube includes skill-creator, cube-background, cube-delegation, cube-memory and cube-docs. Use `$cube-docs` to answer Cube usage/configuration questions from the official online Markdown guides. It contains a guide map, not local copies of the documentation; reading a guide needs network access and an available web-reading tool or command. Activate skill-creator for the authoring workflow, validation and supporting assets instead of copying an unrelated agent's skill format blindly.
 
 Choose the scope before writing. skill-creator defaults to a project skill at `<workspace>/.agents/skills/<name>/SKILL.md`; request global scope explicitly to use `~/.cube/skills/<name>/SKILL.md` or `~/.agents/skills/<name>/SKILL.md`. The other supported project locations above use the same format. When updating an existing skill, preserve its supported location unless you ask to move it. A global destination does not bypass workspace_only or tool approvals; see [permissions](/docs/tools-permissions#policy).
 

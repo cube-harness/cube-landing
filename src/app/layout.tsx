@@ -88,7 +88,7 @@ const jsonLd = {
       description:
         "Read and edit code, run commands with approval, and resume sessions with local memory. Choose OAuth, API keys, or Ollama/LM Studio. Add skills and MCP tools.",
       url: "https://cube-agent.pages.dev/",
-      softwareVersion: "0.1.13",
+      softwareVersion: "0.1.15",
       installUrl: "https://cube-agent.pages.dev/#install",
       downloadUrl: [
         "https://cube-agent.pages.dev/install.ps1",

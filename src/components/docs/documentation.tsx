@@ -60,7 +60,7 @@ export function DocsShell({ current, children }: { current?: string; children: R
           </details>
           <main id="docs-content" className="w-full scroll-mt-24">{children}</main>
           <footer className="mt-16 border-t border-[#2A2622] pt-6 font-mono text-xs text-[#78716C]">
-            Cube 0.1.13 · Configuration and behavior verified against the current source.
+            Cube 0.1.15 · Configuration and behavior verified against the current source.
           </footer>
         </div>
       </div>

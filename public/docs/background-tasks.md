@@ -10,6 +10,8 @@ Ask Cube to run a command in the background when you can continue independent wo
 
 Completion or failure is delivered to the model in the owning thread. The model should not repeatedly poll manage_task just to wait. A long-lived dev server can use timeout:null on a background command and remains running until stopped or Cube exits.
 
+The tool's `timeout` argument is in seconds (up to 600); `background_tasks.timeout_ms` is in milliseconds. Foreground commands default to 120 seconds. A background command uses the configured deadline unless it supplies its own timeout; `null` disables the deadline only for background commands.
+
 Background command concurrency and deadlines are configured separately from subagent concurrency. Queued work waits for a slot. A returned process_id belongs to manage_task, not manage_subagent.
 
 **config.yaml**
@@ -33,7 +35,13 @@ Task history is saved per thread, so reopening a thread can show past task recor
 
 ## Output Continuation & Lifecycle
 
-Large command output is written to temporary runtime-owned log files, with a bounded preview in the tool result/SQLite transcript. manage_task action:get can read preserved foreground or background output using the same process_id and cursor. Follow next_cursor only when more evidence is needed.
+Large command output is written to temporary runtime-owned log files, with a bounded preview in the tool result/SQLite transcript. manage_task action:get can read preserved foreground or background output using the same process_id and cursor. Use `cursor: 0` to start reading the captured log from the beginning; without a cursor, get returns the current process status and preview. `limit` is a page line limit (1–2,000), and `next_cursor` is the next byte position, not a line number. Follow it only when more evidence is needed.
+
+```json
+{"action":"get","id":"11111111-1111-4111-8111-111111111111","cursor":0,"limit":100}
+```
+
+Use an actual returned process_id instead of the illustrative UUID above. `{"action":"list"}` lists this thread's tasks; `{"action":"kill","id":"<process_id>"}` stops a live runtime-owned process.
 
 Full command logs are removed on runtime exit. A resumed thread retains its saved preview, not a promise to retrieve the full old process log. This is different from transcript pruning or model-context compaction.
 

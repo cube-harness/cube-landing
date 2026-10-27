@@ -25,7 +25,7 @@ Put project-specific conventions, build/test commands, architecture and constrai
 
 The .claude directory is a supported location, but the automatically loaded filename is still AGENTS.md. Cube's active loader does not auto-load CLAUDE.md or CONTEXT.md. Mastra ships a separate injector that recognizes those filenames, but Cube does not attach it; manually reading such a file with a tool is not the same as registering it in Cube's instruction snapshot.
 
-Project instructions are sent as a clearly delimited user-context block after system instructions, not as an extra question and not as a user-visible chat message. Their source and scope are included. More specific project scopes win over parent/global conflicts; non-conflicting guidance remains applicable. Equal-scope files are additive; the model is told to ask about unresolved conflicts rather than assume folder order overrides them.
+Project instructions are sent in an `<agents_instructions>` user-context block after system instructions and before conversation history, not as an extra question and not as a user-visible chat message. Cube rebuilds that request projection from the same snapshot; it does not append another copy to the saved conversation on every turn. Their source and scope are included. More specific project scopes win over parent/global conflicts; non-conflicting guidance remains applicable. Equal-scope files are additive; the model is told to ask about unresolved conflicts rather than assume folder order overrides them.
 
 The startup info box shows the loaded files and character counts. A missing AGENTS.md is normal; it is not fabricated or required to start a conversation.
 
@@ -33,7 +33,7 @@ The startup info box shows the loaded files and character counts. A missing AGEN
 
 ## Snapshots & Scoped Discovery
 
-Opening Cube and /new prepare instruction snapshots. Once loaded, instruction content is reused rather than read for each model request. Resume/fork refresh applicable scopes from disk; /reload explicitly refreshes the current project snapshot.
+Opening Cube and /new prepare instruction snapshots in RAM before the first prompt. Once loaded, instruction content is reused rather than read for each model request. Resuming a thread already visited in the same runtime reuses its cached snapshot. On the first activation of a saved thread in that runtime, Cube loads a fresh base and rereads previously discovered scopes; fork also refreshes applicable scopes. /reload explicitly refreshes the active thread's snapshot.
 
 When the agent works with a new path, discovery can load applicable nested AGENTS.md scopes. It checks ancestors of touched paths, not every descendant of the repository, and caches both found files and misses. An already visited scope is not reread during chat.
 

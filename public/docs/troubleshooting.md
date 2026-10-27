@@ -44,4 +44,6 @@ A child failure may still leave a readable private transcript. Read it before as
 
 Check ~/.cube/logs/threads for thread-scoped diagnostics, and include the thread ID, Cube version, gateway/model, failing tool and exact error when reporting a bug. Review logs for private source content, identifiers, tokens and headers before sharing them.
 
+For memory that is not yet available, first check [extraction eligibility and the file formats](/docs/memory-sessions#durable): compaction alone does not produce MEMORY.md, and min_idle_hours is an eligibility threshold, not a scheduled timer. After memory is published, /reload refreshes the active instruction index. A failed worker or malformed Markdown entry preserves existing committed memory and reports a diagnostic; it does not justify deleting the database.
+
 Record whether the issue is reproducible after /resume or a new launch. Do not delete ~/.cube as a generic troubleshooting step: it contains credentials, settings, conversations and durable memory.

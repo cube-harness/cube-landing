@@ -37,7 +37,7 @@ Pruning replaces eligible older tool-result bodies in the model-visible projecti
 
 The current selector follows OpenCode-style protection: preserve recent user-turn boundaries and roughly the latest 40K estimated tool-output tokens, and only prune when the removable output exceeds 20K. Protected tools are excluded. These are built-in selection rules, not config.yaml fields.
 
-The full saved transcript remains in SQLite for the UI and evidence retrieval. A pruned request is not proof that those old messages were physically deleted.
+Selection runs after a completed turn when no approval or input suspension remains; it does not wait until the context is nearly full. Error results, protected tools and recent boundaries are preserved. The full saved transcript remains in SQLite for the UI and evidence retrieval. A pruned request is not proof that those old messages were physically deleted.
 
 <a id="compaction"></a>
 
@@ -45,7 +45,7 @@ The full saved transcript remains in SQLite for the UI and evidence retrieval. A
 
 /compact requires at least manual_min_ratio occupancy (default 0.30) and an eligible safe cut. Low occupancy, insufficient history or unsafe tool boundaries produce a notice instead of wasting a summary call. keep_recent_ratio controls the retained recent token capacity, not a fixed number of messages.
 
-The summary is a continuation context block, not a new user task. It preserves relevant decisions, constraints, evidence, pending work and next actions. Summary output is bounded by the derived reserve and the summarizer's output limit; reserve_tokens is not a mandatory summary length.
+The summary is a continuation context block, not a new user task. It belongs to a thread checkpoint in SQLite, separate from the durable-memory Markdown files described in [Memory & Sessions](/docs/memory-sessions#memory-files). It preserves relevant decisions, constraints, evidence, pending work and next actions. Summary output is bounded by the derived reserve and the summarizer's output limit; reserve_tokens is not a mandatory summary length.
 
 Compaction writes a context checkpoint and changes the request projection. It does not erase the full TUI transcript. Resume and fork preserve the corresponding continuation state and tool-call pairing.
 
