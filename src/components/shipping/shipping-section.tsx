@@ -21,7 +21,7 @@ const SHIP_LABELS: string[] = [
   "MCP",
   "AGENTS.md",
   "SOUL.md",
-  "Diff Preview",
+  "Diff-Preview",
   "Theming",
 ];
 

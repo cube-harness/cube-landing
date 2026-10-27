@@ -245,7 +245,7 @@ export function Navbar() {
                 <GithubIcon className="w-4 h-4" />
                 <span>GitHub</span>
               </a>
-              <span className="text-[10px] font-mono text-[#78716C]">Cube 0.1.15</span>
+              <span className="text-[10px] font-mono text-[#78716C]">Cube 0.1.16</span>
             </div>
           </motion.div>
         )}
