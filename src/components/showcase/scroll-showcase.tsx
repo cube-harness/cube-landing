@@ -134,6 +134,7 @@ const ALL_6_FEATURES: ShowcaseFeature[] = [
     // ascii-magic-5: concurrent vaults & scaffolding — parallel execution
     bgAsset: "/assets/ascii-magic-6.png",
     bgFocus: "object-top",
+    videoSrc: "/demos/subagents.mp4",
     description:
       "Break a larger coding task into focused assignments for subagents. Delegate independent exploration and implementation work, then bring their findings back into the main conversation.",
     bullets: [
