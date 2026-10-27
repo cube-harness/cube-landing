@@ -3,72 +3,49 @@
 import { useEffect, useState } from "react";
 
 export function useDownloadCount() {
-  const [count, setCount] = useState<number>(0);
+  const [count, setCount] = useState<number | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-    fetch("/api/downloads")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch");
-        return res.json();
+    const controller = new AbortController();
+    fetch("/api/downloads", { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error("Downloads unavailable");
+        return response.json();
       })
-      .then((data) => {
-        if (isMounted && typeof data.total === "number") {
+      .then((data: { total?: unknown }) => {
+        if (
+          !controller.signal.aborted &&
+          typeof data.total === "number" &&
+          Number.isSafeInteger(data.total) &&
+          data.total >= 0
+        ) {
           setCount(data.total);
-          setLoaded(true);
         }
       })
-      .catch(() => {
-        if (isMounted) setLoaded(true);
+      .catch(() => {})
+      .finally(() => {
+        if (!controller.signal.aborted) setLoaded(true);
       });
-
-    return () => {
-      isMounted = false;
-    };
+    return () => controller.abort();
   }, []);
 
   return { count, loaded };
 }
 
 export function DownloadCounterBadge() {
-  const { count } = useDownloadCount();
-  const [displayCount, setDisplayCount] = useState(0);
-
-  useEffect(() => {
-    if (count <= 0) return;
-    let startTimestamp: number | null = null;
-    let frameId: number;
-    const duration = 1000; // ms
-    const startValue = 0;
-    const endValue = count;
-
-    const step = (timestamp: number) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      const easeProgress = 1 - Math.pow(1 - progress, 3);
-      const current = Math.floor(startValue + (endValue - startValue) * easeProgress);
-      setDisplayCount(current);
-
-      if (progress < 1) {
-        frameId = requestAnimationFrame(step);
-      } else {
-        setDisplayCount(endValue);
-      }
-    };
-
-    frameId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frameId);
-  }, [count]);
+  const { count, loaded } = useDownloadCount();
 
   return (
-    <div className="mt-4 flex items-center justify-center gap-2 text-xs font-mono text-[#A1A1AA] px-4 text-center">
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+    <div role="status" className="mt-4 flex items-center justify-center gap-2 text-xs font-mono text-[#A8A29E] px-4 text-center">
+      <span className="w-1.5 h-1.5 bg-[#38BDF8] shrink-0" />
       <span className="leading-snug">
-        <span className="text-white font-semibold">
-          {displayCount.toLocaleString()}
-        </span>{" "}
-        developers installed across Windows, MacOS & Linux
+        {count !== null ? (
+          <>
+            <span className="text-[#F5F5F4] font-semibold">{count.toLocaleString()}</span>{" "}
+            downloads across Windows, macOS &amp; Linux
+          </>
+        ) : loaded ? "Download count unavailable" : "Loading download count…"}
       </span>
     </div>
   );

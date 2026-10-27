@@ -95,3 +95,73 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #38BDF8;
 }
+
+/* Keep perspective, stone tones and drafting lines; darken only the reading plane. */
+.reading-plane::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: -2rem;
+  z-index: -1;
+  background: radial-gradient(ellipse at center, rgb(10 9 8 / 68%), transparent 76%);
+}
+
+.chamber-shadow {
+  box-shadow: 0 -24px 60px rgb(0 0 0 / 75%), 0 -1px 0 rgb(120 113 108 / 15%);
+}
+
+.hero-chamber {
+  min-height: 100svh;
+  padding-block: 6rem;
+}
+
+.harness-card {
+  position: relative;
+  min-height: 78svh;
+}
+
+.harness-stage {
+  min-height: inherit;
+  padding-block: 5rem;
+}
+
+.showcase-stage {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+section[id], #harness, #install {
+  scroll-margin-top: 90px;
+}
+
+:where(button, a, video):focus-visible {
+  outline: 2px solid #38BDF8;
+  outline-offset: 4px;
+}
+
+@media (min-width: 1024px) {
+  .harness-card {
+    position: sticky;
+    top: var(--sticky-top, 0px);
+    min-height: 90svh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .harness-card { position: relative; top: auto; }
+  .harness-stage { transform: none !important; }
+  .depth-veil { display: none; }
+}
+
+/* Normal-flow chambers keep a stable reading plane on small viewports. */
+@media (max-width: 1023px) {
+  .harness-stage { transform: none !important; }
+  .depth-veil { display: none; }
+}

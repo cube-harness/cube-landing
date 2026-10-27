@@ -28,6 +28,7 @@ export function Navbar() {
   const clickTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const scrollToSection = (id: string) => {
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
     isClickScrolling.current = true;
     setActiveSection(id);
     setMobileMenuOpen(false);
@@ -38,7 +39,7 @@ export function Navbar() {
     }, 850);
 
     if (id === "hero") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior });
       window.history.pushState(null, "", "#hero");
       return;
     }
@@ -47,8 +48,8 @@ export function Navbar() {
     if (el) {
       const elementPosition = Math.ceil(el.getBoundingClientRect().top + window.scrollY);
       window.scrollTo({
-        top: Math.max(0, elementPosition - 30),
-        behavior: "smooth",
+        top: Math.max(0, elementPosition - 90),
+        behavior,
       });
       window.history.pushState(null, "", `#${id}`);
     }
@@ -139,7 +140,8 @@ export function Navbar() {
                 <button
                   key={sec.id}
                   onClick={() => scrollToSection(sec.id)}
-                  className="relative px-3 py-1 rounded-sm text-xs transition-colors cursor-pointer select-none font-mono"
+                  aria-current={isActive ? "location" : undefined}
+                  className="relative min-h-11 px-3 py-1 rounded-sm text-xs transition-colors cursor-pointer select-none font-mono"
                 >
                   {isActive && (
                     <motion.span
@@ -174,7 +176,7 @@ export function Navbar() {
               href="https://github.com/hphucdev-04/cube"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-sm text-[#A8A29E] hover:text-[#F5F5F4] hover:bg-white/[0.04] transition-colors flex items-center justify-center border border-transparent hover:border-[#2A2622]"
+              className="min-h-11 min-w-11 p-1.5 rounded-sm text-[#A8A29E] hover:text-[#F5F5F4] hover:bg-white/[0.04] transition-colors flex items-center justify-center border border-transparent hover:border-[#2A2622]"
               title="View on GitHub"
             >
               <GithubIcon className="w-4 h-4" />
@@ -189,8 +191,10 @@ export function Navbar() {
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 text-[#A8A29E] hover:text-[#F5F5F4] transition-colors cursor-pointer"
+              className="min-h-11 min-w-11 p-1.5 text-[#A8A29E] hover:text-[#F5F5F4] transition-colors cursor-pointer"
               aria-label="Toggle navigation"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -202,6 +206,7 @@ export function Navbar() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
+            id="mobile-navigation"
             initial={{ opacity: 0, y: -8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -215,7 +220,7 @@ export function Navbar() {
                   key={sec.id}
                   onClick={() => scrollToSection(sec.id)}
                   className={cn(
-                    "w-full text-left px-3.5 py-2 rounded-sm text-xs flex items-center justify-between transition-colors cursor-pointer font-mono",
+                    "min-h-11 w-full text-left px-3.5 py-2 rounded-sm text-xs flex items-center justify-between transition-colors cursor-pointer font-mono",
                     isActive
                       ? "bg-[#38BDF8] text-[#0A0908] font-bold shadow-sm"
                       : "text-[#A8A29E] hover:text-[#F5F5F4] hover:bg-white/[0.04]"
@@ -240,7 +245,7 @@ export function Navbar() {
                 <GithubIcon className="w-4 h-4" />
                 <span>GitHub</span>
               </a>
-              <span className="text-[10px] font-mono text-[#78716C]">Cube 0.1.7</span>
+              <span className="text-[10px] font-mono text-[#78716C]">Cube 0.1.15</span>
             </div>
           </motion.div>
         )}

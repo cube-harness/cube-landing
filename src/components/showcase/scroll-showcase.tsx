@@ -1,16 +1,10 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
-import Image from "next/image";
-import {
-  Terminal,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  RotateCcw,
-} from "lucide-react";
+import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
+import { Terminal, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
+import { Artwork } from "@/components/visual/artwork";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 
 interface ShowcaseFeature {
   id: string;
@@ -150,483 +144,228 @@ const ALL_6_FEATURES: ShowcaseFeature[] = [
   },
 ];
 
-// Compute scroll-to position for a given feature index
-function useFeatureJump(sectionRef: React.RefObject<HTMLDivElement | null>) {
-  return useCallback(
-    (index: number) => {
-      const el = sectionRef.current;
-      if (!el) return;
-      const top = el.getBoundingClientRect().top + window.scrollY;
-      // Each feature occupies 100vh scroll travel within the section
-      const target = top + (index + 0.15) * window.innerHeight;
-      window.scrollTo({ top: target, behavior: "smooth" });
-    },
-    [sectionRef]
+function subscribeReducedMotion(onChange: () => void) {
+  const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function DemoPlayer({ feat, playedVideos, inView, reducedMotion }: {
+  feat: ShowcaseFeature;
+  playedVideos: RefObject<Set<string>>;
+  inView: boolean;
+  reducedMotion: boolean;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
+  const playerInView = useInView(playerRef, { amount: 0.5 });
+
+  // Autoplay each recording once per page visit, only when its player is visible.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (!inView || !playerInView) {
+      video.pause();
+      return;
+    }
+    if (reducedMotion || playedVideos.current.has(feat.id)) return;
+
+    let active = true;
+    video
+      .play()
+      .then(() => {
+        if (active) playedVideos.current.add(feat.id);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+      video.pause();
+    };
+  }, [feat.id, inView, playerInView, playedVideos, reducedMotion]);
+
+  return (
+          <div ref={playerRef} className="min-w-0">
+            <div className="plate-frame bg-[#0D0C0A]/95">
+              <div className="px-4 py-3 border-b border-[#2A2622] flex items-center justify-between gap-3 font-mono text-[11px] text-[#A8A29E]">
+                <span className="flex items-center gap-2"><Terminal aria-hidden="true" className="w-4 h-4" />cube / {feat.label.toLowerCase()}</span>
+                <span>{feat.videoSrc ? "RECORDING" : "COMING SOON"}</span>
+              </div>
+              {feat.videoSrc ? (
+                <video
+                  key={feat.id}
+                  ref={videoRef}
+                  src={inView ? feat.videoSrc : undefined}
+                  controls
+                  onPlay={() => playedVideos.current.add(feat.id)}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  aria-label={`${feat.label} terminal demo recording`}
+                  className="block w-full aspect-video object-contain bg-[#0A0908]"
+                />
+              ) : (
+                <div className="aspect-video flex flex-col items-center justify-center gap-3 text-center px-6">
+                  <Terminal aria-hidden="true" className="w-8 h-8 text-[#78716C]" />
+                  <p className="font-cinzel text-sm text-[#D6D3D1]">Subagent demo</p>
+                  <p className="font-mono text-xs text-[#A8A29E]">Recording coming soon.</p>
+                </div>
+              )}
+            </div>
+            <p className="font-mono text-[11px] leading-relaxed text-[#A8A29E] mt-4">
+              {feat.videoSrc ? "Recorded terminal demo. Plays once in view; replay, seek, or open fullscreen." : "Focused delegation, parallel subtasks, and findings returned to the main conversation."}
+            </p>
+          </div>
   );
 }
 
 export function ScrollShowcase() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const playedVideos = useRef(new Set<string>());
+  const [backgroundFeature, setBackgroundFeature] = useState(ALL_6_FEATURES[0]);
+  const reducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => true,
+  );
   const [activeIdx, setActiveIdx] = useState(0);
-  const [direction, setDirection] = useState<1 | -1>(1);
-  const [isDocked, setIsDocked] = useState(false);
-  const [isVideoEnded, setIsVideoEnded] = useState(false);
-
-  // Total slots: 6 features + 1 trailing slot (700vh total) so the final feature stays pinned while Ship slides over it
-  const totalSlots = ALL_6_FEATURES.length + 1; // 7
-  const exitStart = ALL_6_FEATURES.length / totalSlots; // 6/7 ≈ 0.857
-
-  // Map scroll progress across the 700vh section to feature index 0→5
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end end"],
-  });
-
-  // When next card (Ship) slides over during the 7th 100vh block:
-  // scale down subtly (1 -> 0.94) and fade in dark shadow veil (0 -> 0.55)
-  const exitScale = useTransform(scrollYProgress, [exitStart, 1], [1, 0.94]);
-  const exitVeil = useTransform(scrollYProgress, [exitStart, 1], [0, 0.55]);
-
-  const updateActiveIdx = useCallback((nextIdx: number) => {
-    setActiveIdx((prev) => {
-      if (nextIdx !== prev) {
-        setDirection(nextIdx >= prev ? 1 : -1);
-        setIsVideoEnded(false);
-        return nextIdx;
-      }
-      return prev;
-    });
-  }, []);
-
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    // Progress during the first 600vh maps to features 0 to 5; beyond 6/7 locks to feature 5 (Subagent)
-    const activePortion = Math.min(1, v * (totalSlots / ALL_6_FEATURES.length));
-    const idx = Math.max(
-      0,
-      Math.min(ALL_6_FEATURES.length - 1, Math.floor(activePortion * ALL_6_FEATURES.length))
-    );
-    updateActiveIdx(idx);
-  });
-
-  // Detect when Showcase section has fully docked into viewport at top-0
-  useEffect(() => {
-    const checkDocked = () => {
-      const el = sectionRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      // Docked when top is at top-0 (<= 15px) and hasn't completely scrolled away
-      const docked = rect.top <= 15 && rect.bottom >= window.innerHeight * 0.4;
-      setIsDocked(docked);
-    };
-
-    checkDocked();
-    window.addEventListener("scroll", checkDocked, { passive: true });
-    window.addEventListener("resize", checkDocked, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", checkDocked);
-      window.removeEventListener("resize", checkDocked);
-    };
-  }, []);
+  const inView = useInView(sectionRef, { margin: "100px" });
 
   const feat = ALL_6_FEATURES[activeIdx];
-  const hasVideo = Boolean(feat.videoSrc);
 
-  // Play video ONLY when docked at top-0; play once to end without loop
+  // Keep the current plate visible until the next full-resolution etching is decoded.
   useEffect(() => {
-    const vid = videoRef.current;
-    if (!vid) return;
-
-    if (isDocked && hasVideo) {
-      if (!isVideoEnded) {
-        vid.play().catch(() => {});
-      }
-    } else {
-      vid.pause();
-      if (!isDocked) {
-        vid.currentTime = 0;
-        setIsVideoEnded(false);
-      }
-    }
-  }, [isDocked, activeIdx, hasVideo, isVideoEnded]);
-
-  const handleReplay = useCallback(() => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
-      setIsVideoEnded(false);
-    }
-  }, []);
-
-  const rawJumpTo = useFeatureJump(sectionRef);
-  const jumpTo = useCallback(
-    (index: number) => {
-      updateActiveIdx(index);
-      rawJumpTo(index);
-    },
-    [rawJumpTo, updateActiveIdx]
-  );
-
-  // Transition variants moving horizontally matching the progress bar flow
-  const horizontalSlideVariants = {
-    enter: (dir: number) => ({
-      x: dir > 0 ? -40 : 40,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (dir: number) => ({
-      x: dir > 0 ? 40 : -40,
-      opacity: 0,
-    }),
-  };
+    if (!inView) return;
+    let active = true;
+    const image = new window.Image();
+    image.src = feat.bgAsset.replace(/\.png$/, ".webp");
+    image.decode().then(() => {
+      if (active) setBackgroundFeature(feat);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [feat, inView]);
 
   return (
-    /**
-     * 600vh tall scroll container — each 100vh = one feature chamber.
-     * The sticky child is pinned to the viewport for the full 600vh scroll travel.
-     */
     <section
       ref={sectionRef}
       id="demo"
       className="relative z-20"
-      style={{ height: `${(ALL_6_FEATURES.length + 2) * 100}vh` }}
     >
-      {/* ═══════════════════════════════════════════════════════════
-          STICKY PINNED STAGE — occupies exactly one viewport height
-          Slides up over the final Harness card with deep shadow.
-      ═══════════════════════════════════════════════════════════ */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#0A0908] border-t border-[#3E3833]/80 shadow-[0_-30px_70px_rgba(0,0,0,0.98),0_-10px_25px_rgba(0,0,0,0.85)]">
-        {/* Top hairline highlight for incoming architectural card */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#78716C]/60 to-transparent z-30"
-        />
+      <div className="showcase-stage relative w-full overflow-hidden bg-[#0A0908] border-t border-[#3E3833]/80 chamber-shadow">
+        {/* One full-bleed plate: the image remains the architectural space. */}
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={backgroundFeature.id}
+            aria-hidden="true"
+            className="showcase-backdrop absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { delay: reducedMotion ? 0 : 0.2, duration: reducedMotion ? 0 : 0.4 } }}
+            transition={{ duration: reducedMotion ? 0 : 0.6, ease: "easeOut" }}
+          >
+            <Artwork
+              src={backgroundFeature.bgAsset}
+              className={cn("object-cover contrast-[1.12] brightness-[0.86]", backgroundFeature.bgFocus)}
+            />
+          </motion.div>
+        </AnimatePresence>
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-[#0A0908]/90 via-[#0A0908]/40 to-[#0A0908]/20" />
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-[#0A0908]/65 via-transparent to-[#0A0908]/85" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-[#78716C]/60 to-transparent" />
+          <div className="hidden lg:block absolute inset-y-0 left-[42%] w-px bg-[#3E3833]/35" />
+          <div className="absolute inset-x-0 top-1/3 h-px bg-[#3E3833]/20" />
+          <div className="absolute inset-x-0 bottom-1/3 h-px bg-[#3E3833]/20" />
+        </div>
 
-        {/* Receding depth wrapper: scales down as next card (Ship) slides over during the 7th 100vh block */}
-        <motion.div
-          style={{ scale: exitScale }}
-          className="relative w-full h-full flex flex-col justify-between origin-top will-change-transform"
-        >
-
-        {/* ── LAYER 0: FULL-SCREEN PIRANESI BACKDROP ────────────────
-            This is NOT an image inside a box.
-            The artwork IS the entire stage — no borders, no frames.
-        ──────────────────────────────────────────────────────────── */}
-        <div className="absolute inset-0 z-0">
-          {ALL_6_FEATURES.map((f, i) => {
-            const isActive = i === activeIdx;
-            return (
-              <div
-                key={f.id}
+        <div className="relative z-10 px-6 sm:px-12 md:px-20 lg:px-24 pt-24 pb-6 border-b border-[#2A2622]/60">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <span className="font-cinzel text-xs font-bold text-[#D6D3D1] tracking-wider">
+              TERMINAL SHOWCASE
+            </span>
+            <span className="font-mono text-[11px] text-[#A8A29E]">{feat.featureNum}</span>
+          </div>
+          <div className="flex flex-wrap gap-1" role="tablist" aria-label="Showcase features">
+            {ALL_6_FEATURES.map((feature, index) => (
+              <button
+                key={feature.id}
+                id={`demo-tab-${feature.id}`}
+                type="button"
+                role="tab"
+                aria-selected={index === activeIdx}
+                aria-controls="demo-panel"
+                tabIndex={index === activeIdx ? 0 : -1}
+                onClick={() => setActiveIdx(index)}
+                onKeyDown={(event) => {
+                  const next = event.key === "ArrowRight" ? (index + 1) % 6
+                    : event.key === "ArrowLeft" ? (index + 5) % 6
+                    : event.key === "Home" ? 0 : event.key === "End" ? 5 : null;
+                  if (next === null) return;
+                  event.preventDefault();
+                  setActiveIdx(next);
+                  document.getElementById(`demo-tab-${ALL_6_FEATURES[next].id}`)?.focus({ preventScroll: true });
+                }}
                 className={cn(
-                  "absolute inset-0 transition-opacity duration-700 ease-in-out pointer-events-none will-change-[opacity]",
-                  isActive ? "opacity-100 z-10" : "opacity-0 z-0"
+                  "min-h-11 px-3 border-b font-mono text-xs cursor-pointer transition-colors",
+                  index === activeIdx
+                    ? "border-[#38BDF8] text-[#F5F5F4] bg-[#0D0C0A]/85"
+                    : "border-transparent text-[#A8A29E] hover:text-[#F5F5F4]",
                 )}
               >
-                <Image
-                  src={f.bgAsset}
-                  alt=""
-                  fill
-                  priority={i === 0 || i === 1}
-                  sizes="100vw"
-                  className={cn(
-                    "object-cover contrast-[1.12] brightness-[0.80]",
-                    f.bgFocus
-                  )}
-                />
-                {/* Chiaroscuro: clear Piranesi etching artwork with text shadow on left */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0A0908]/90 via-[#0A0908]/35 to-[#0A0908]/40" />
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0A0908]/70 via-transparent to-[#0A0908]/85" />
-              </div>
-            );
-          })}
-        </div>
-
-        {/* ── LAYER 1: ARCHITECTURAL DATUM GRID (very subtle) ───────── */}
-        <div aria-hidden="true" className="absolute inset-0 z-[1] pointer-events-none">
-          <div className="absolute top-[4.5rem] left-0 right-0 h-px bg-[#3E3833]/25" />
-          <div className="absolute bottom-[3.5rem] left-0 right-0 h-px bg-[#3E3833]/25" />
-          {/* Vertical divider at ~55% only on large screens */}
-          <div className="absolute inset-y-0 hidden lg:block" style={{ left: "55%" }}>
-            <div className="h-full w-px bg-[#2A2622]/40" />
+                <span className="mr-2 text-[10px] text-[#78716C]">{feature.code}</span>
+                {feature.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* ── LAYER 2: CONTENT INSCRIBED INTO THE ARCHITECTURAL SPACE ── */}
-        <div className="relative z-10 h-full flex flex-col">
-
-          {/* TOP HEADER BAR — clear of left & right sidebars (w-16 = 64px) */}
-          <div className="flex items-center justify-between px-5 sm:px-8 md:px-20 lg:px-24 py-3 border-b border-[#2A2622]/60 bg-[#0A0908]/55 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <span className="font-cinzel text-[11px] font-bold text-[#D6D3D1] tracking-wider">
-                CAPABILITIES // {feat.label.toUpperCase()}
-              </span>
-              <span className="font-mono text-[11px] text-[#3E3833]">{feat.featureNum}</span>
-            </div>
-
-            {/* 6-dot feature navigator */}
-            <div className="flex items-center gap-2" role="tablist" aria-label="Showcase features">
-              {ALL_6_FEATURES.map((f, i) => (
-                <button
-                  key={f.id}
-                  role="tab"
-                  aria-selected={i === activeIdx}
-                  onClick={() => jumpTo(i)}
-                  title={`${f.code} — ${f.label}`}
-                  className="group flex flex-col items-center gap-0.5 cursor-pointer"
-                >
-                  <span
-                    className={cn(
-                      "block transition-all duration-200",
-                      i === activeIdx
-                        ? "w-4 h-1 bg-[#38BDF8] rounded-full"
-                        : "w-1.5 h-1.5 bg-[#3E3833] rounded-full group-hover:bg-[#78716C]"
-                    )}
-                  />
-                   <span className={cn("font-mono text-[9px] hidden sm:block", i === activeIdx ? "text-[#A8A29E]" : "text-[#3E3833] group-hover:text-[#78716C]")}>
-                    {f.code}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <span className="font-mono text-[10px] text-[#3E3833] hidden sm:block">{feat.code} // {feat.label.toUpperCase()}</span>
-          </div>
-
-          {/* MAIN BODY — fills remaining height */}
-          <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
-
-            {/* LEFT: MONUMENTAL INSCRIPTION ON STONE — clear of left sidebar ──── */}
-            <div className="lg:w-[52%] flex flex-col justify-center px-5 sm:px-8 md:pl-20 md:pr-8 lg:pl-24 lg:pr-10 py-6 lg:py-10 overflow-y-auto">
-              <AnimatePresence mode="popLayout" initial={false} custom={direction}>
-                <motion.div
-                  key={feat.id}
-                  custom={direction}
-                  variants={horizontalSlideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                  className="max-w-xl"
-                >
-                  {/* Giant dim ordinal watermark — limestone stone tone, Piranesi scale */}
-                  <div
-                    aria-hidden="true"
-                    className="font-cinzel font-bold text-[#F5F5F4]/[0.05] leading-none select-none -ml-1 mb-1"
-                    style={{ fontSize: "clamp(5rem,14vw,11rem)" }}
-                  >
-                    {feat.code}
-                  </div>
-
-                  {/* Feature title — offset over the giant numeral */}
-                  <div className="-mt-6 sm:-mt-10 lg:-mt-14 relative z-10">
-                    {/* Surveyor's notation — muted stone, NOT cyan */}
-                    <div className="font-mono text-[11px] text-[#78716C] mb-2 tracking-wider">
-                      ├── {feat.tagline}
-                    </div>
-
-                    <h2
-                      className="font-sans font-semibold text-[#F5F5F4] leading-[1.1] mb-3"
-                      style={{ fontSize: "clamp(1.5rem,3.5vw,2.6rem)" }}
-                    >
-                      {feat.title}
-                    </h2>
-
-                    <p className="text-[#A8A29E] font-serif leading-relaxed mb-5 text-sm sm:text-base">
-                      {feat.description}
-                    </p>
-
-                    <div className="space-y-2 pt-3 border-t border-[#3E3833]/40">
-                      {feat.bullets.map((b, i) => (
-                        <div key={i} className="flex items-start gap-2.5 text-xs text-[#D6D3D1] font-mono">
-                          <Check className="w-3.5 h-3.5 text-[#A8A29E] shrink-0 mt-0.5" />
-                          <span>{b}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* VERTICAL DIVIDER (desktop only) */}
-            <div className="hidden lg:block w-px bg-[#2A2622]/50 self-stretch" />
-
-            {/* RIGHT: TERMINAL / VIDEO — clear of right sidebar ── */}
-            <div className="lg:w-[48%] flex flex-col justify-center px-5 sm:px-6 md:pr-20 md:pl-6 lg:pr-24 lg:pl-8 py-5 overflow-y-auto">
-              <AnimatePresence mode="popLayout" initial={false} custom={direction}>
-                <motion.div
-                  key={feat.id + "-terminal"}
-                  custom={direction}
-                  variants={horizontalSlideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                  className="w-full"
-                >
-                  {/* Terminal chrome bar */}
-                  <div className="flex items-center justify-between px-3.5 py-2 bg-[#0A0908]/85 border border-[#2A2622] border-b-0 backdrop-blur-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#2A2622]" />
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#2A2622]" />
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#2A2622]" />
-                      </div>
-                      <Terminal className="w-3 h-3 text-[#A8A29E]" />
-                      <span className="font-mono text-[11px] text-[#D6D3D1]">cube ~ {feat.id}</span>
-                    </div>
-
-                    <span className="font-mono text-[10px] text-[#78716C]">
-                      {hasVideo ? "CAPTURE ACTIVE" : "STANDBY"}
-                    </span>
-                  </div>
-
-                  {/* Content area: MP4 video if available, otherwise COMING SOON placeholder */}
-                  <div className="border border-[#2A2622] bg-[#050403]/90 backdrop-blur-sm overflow-hidden">
-                    {hasVideo ? (
-                      <div className="relative aspect-video w-full bg-[#050403]">
-                        <video
-                          ref={videoRef}
-                          key={feat.videoSrc}
-                          src={feat.videoSrc}
-                          muted
-                          playsInline
-                          preload="auto"
-                          onCanPlay={(e) => {
-                            if (isDocked && !isVideoEnded) {
-                              e.currentTarget.play().catch(() => {});
-                            }
-                          }}
-                          onEnded={() => setIsVideoEnded(true)}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="relative aspect-video w-full flex flex-col items-center justify-center p-6 bg-[#050403]/95 text-center">
-                        {/* Subtle corner ticks */}
-                        <div className="absolute top-2.5 left-2.5 font-mono text-[9px] text-[#3E3833]">┌ DEMO // {feat.code}</div>
-                        <div className="absolute top-2.5 right-2.5 font-mono text-[9px] text-[#3E3833]">{feat.label.toUpperCase()} ┐</div>
-                        <div className="absolute bottom-2.5 left-2.5 font-mono text-[9px] text-[#3E3833]">└ CUBE RUNTIME</div>
-                        <div className="absolute bottom-2.5 right-2.5 font-mono text-[9px] text-[#3E3833]">┘</div>
-
-                        <div className="w-10 h-10 border border-[#2A2622] bg-[#0C0B09] flex items-center justify-center mb-3">
-                          <Terminal className="w-4 h-4 text-[#78716C]" />
-                        </div>
-                        <span className="font-serif text-sm tracking-[0.25em] uppercase text-[#D6D3D1]">
-                          COMING SOON
-                        </span>
-                        <p className="mt-1.5 font-mono text-[11px] text-[#78716C] max-w-xs">
-                          A terminal recording for {feat.label} is not available yet.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Footer bar with LIVE TERMINAL CAPTURE and Replay button */}
-                  <div className="flex items-center justify-between px-3.5 py-2 bg-[#0A0908]/85 border border-t-0 border-[#2A2622] backdrop-blur-sm text-[10px] font-mono">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          hasVideo
-                            ? isVideoEnded
-                              ? "bg-[#78716C]"
-                              : "bg-[#38BDF8] animate-pulse"
-                            : "bg-[#3E3833]"
-                        )}
-                      />
-                      <span className={hasVideo ? "text-[#D6D3D1] font-semibold" : "text-[#78716C]"}>
-                        LIVE TERMINAL CAPTURE
-                      </span>
-                      {hasVideo && isVideoEnded && (
-                        <span className="text-[9px] text-[#78716C] ml-1.5 hidden sm:inline select-none">
-                          // COMPLETE
-                        </span>
-                      )}
-                    </div>
-
-                    {hasVideo && (
-                      <button
-                        type="button"
-                        onClick={handleReplay}
-                        className="flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-[#141210] hover:bg-[#38BDF8] text-[#A8A29E] hover:text-[#0A0908] border border-[#2A2622] hover:border-transparent transition-all cursor-pointer select-none text-[10px] font-mono font-medium"
-                        title="Replay terminal demonstration"
-                      >
-                        <RotateCcw className="w-3 h-3 stroke-[2]" />
-                      </button>
-                    )}
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* BOTTOM FEATURE PROGRESS BAR — clear of sidebars (w-16 = 64px) */}
-          <div className="px-5 sm:px-8 md:px-20 lg:px-24 py-3 border-t border-[#2A2622]/60 bg-[#0A0908]/55 backdrop-blur-sm flex items-center gap-4">
-            {/* Prev */}
-            <button
-              onClick={() => jumpTo(Math.max(0, activeIdx - 1))}
-              disabled={activeIdx === 0}
-              className="text-[#78716C] hover:text-[#F5F5F4] disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer transition-colors"
-              title="Previous feature"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            {/* Feature progress ruler */}
-            <div className="flex-1 flex items-center gap-3 min-w-0">
-              <span className="font-mono text-[10px] text-[#78716C] shrink-0">I</span>
-              <div className="relative flex-1 h-[3px] bg-[#1A1816] overflow-visible">
-                {/* Filled progress */}
-                <motion.div
-                  className="absolute left-0 top-0 h-full bg-[#38BDF8]"
-                  animate={{ width: `${((activeIdx + 1) / ALL_6_FEATURES.length) * 100}%` }}
-                  transition={{ duration: 0.3 }}
-                />
-                {/* Tick marks at each feature */}
-                {ALL_6_FEATURES.map((f, i) => (
-                  <button
-                    key={f.id}
-                    onClick={() => jumpTo(i)}
-                    className="absolute top-[-4px] w-[3px] h-[11px] cursor-pointer transition-colors"
-                    style={{ left: `${(i / (ALL_6_FEATURES.length - 1)) * 100}%` }}
-                    title={`${f.code} ${f.label}`}
-                  >
-                    <div className={cn("w-full h-full", i <= activeIdx ? "bg-[#38BDF8]" : "bg-[#2A2622]")} />
-                  </button>
-                ))}
-              </div>
-              <span className="font-mono text-[10px] text-[#78716C] shrink-0">VI</span>
-            </div>
-
-            {/* Next */}
-            <button
-              onClick={() => jumpTo(Math.min(ALL_6_FEATURES.length - 1, activeIdx + 1))}
-              disabled={activeIdx === ALL_6_FEATURES.length - 1}
-              className="text-[#78716C] hover:text-[#F5F5F4] disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer transition-colors"
-              title="Next feature"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-
-            {/* Current feature readout */}
-            <div className="font-mono text-[11px] text-[#F5F5F4] font-bold shrink-0">
-              FEATURE {feat.code} // VI
-            </div>
-          </div>
-        </div>
-        {/* ─────────────────────────────────────────────────────────── */}
-        </motion.div>
-
-        {/* Receding dark shadow veil when Ship slides over */}
+        <AnimatePresence mode="wait" initial={false}>
         <motion.div
-          style={{ opacity: exitVeil }}
-          className="pointer-events-none absolute inset-0 z-40 bg-[#0A0908]"
-        />
+          key={feat.id}
+          initial={{ opacity: 0, y: reducedMotion ? 0 : 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }}
+          transition={{ duration: reducedMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
+          id="demo-panel"
+          role="tabpanel"
+          aria-labelledby={`demo-tab-${feat.id}`}
+          className="relative z-10 grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-8 lg:gap-10 px-6 sm:px-12 md:px-20 lg:px-24 py-10 lg:py-12 items-center flex-1"
+        >
+          {ALL_6_FEATURES.map((feature, index) => (
+            <div key={feature.id} data-demo-copy={feature.id} hidden={index !== activeIdx} className="relative reading-plane">
+              <div aria-hidden="true" className="hidden lg:block font-cinzel text-[#F5F5F4]/[0.06] leading-none select-none text-[clamp(5rem,12vw,10rem)] -ml-1 mb-[-3rem]">
+                {feature.code}
+              </div>
+              <div className="relative">
+                <p className="font-mono text-xs text-[#A8A29E] mb-3 leading-relaxed">├── {feature.tagline}</p>
+                <h2 className="font-sans font-semibold text-[#F5F5F4] leading-[1.1] mb-4 text-[clamp(1.6rem,3vw,2.6rem)]">
+                  {feature.title}
+                </h2>
+                <p className="text-[#D6D3D1] font-serif leading-relaxed text-base mb-6">{feature.description}</p>
+                <ul className="space-y-3 pt-4 border-t border-[#3E3833]/50">
+                  {feature.bullets.map((bullet) => (
+                    <li key={bullet} className="flex items-start gap-2.5 text-xs leading-relaxed text-[#D6D3D1] font-mono">
+                      <Check aria-hidden="true" className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#A8A29E]" />
+                      <span>{bullet}</span>
+                    </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          ))}
+
+          <DemoPlayer feat={feat} playedVideos={playedVideos} inView={inView} reducedMotion={reducedMotion} />
+        </motion.div>
+        </AnimatePresence>
+
+        <div className="relative z-10 flex items-center justify-between gap-4 px-6 sm:px-12 md:px-20 lg:px-24 py-5 border-t border-[#2A2622]/60">
+          <button type="button" onClick={() => setActiveIdx((activeIdx + 5) % 6)} aria-label="Previous demo" className="min-h-11 flex items-center gap-2 font-mono text-xs text-[#D6D3D1] cursor-pointer">
+            <ChevronLeft aria-hidden="true" className="w-4 h-4" />Previous
+          </button>
+          <span className="hidden sm:block font-cinzel text-[11px] tracking-wider text-[#78716C]">PLATE {feat.featureNum}</span>
+          <button type="button" onClick={() => setActiveIdx((activeIdx + 1) % 6)} aria-label="Next demo" className="min-h-11 flex items-center gap-2 font-mono text-xs text-[#D6D3D1] cursor-pointer">
+            Next<ChevronRight aria-hidden="true" className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </section>
   );

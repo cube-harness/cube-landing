@@ -15,7 +15,7 @@ export function Footer() {
             CUBE
           </span>
           <span className="text-[10px] font-mono px-1.5 py-0.2 bg-[#141210] text-[#78716C] border border-[#2A2622]">
-            0.1.7
+            0.1.15
           </span>
         </div>
 
@@ -50,7 +50,12 @@ export function Footer() {
             <span>GitHub</span>
           </a>
           <span className="text-[#3E3833]">·</span>
-          <span>phuc.ph24012004@gmail.com</span>
+          <a
+            href="mailto:phuc.ph24012004@gmail.com"
+            className="hover:text-[#F5F5F4] transition-colors"
+          >
+            phuc.ph24012004@gmail.com
+          </a>
         </div>
       </div>
     </footer>

@@ -1,26 +1,32 @@
 "use client";
 
-import { useState, useRef } from "react";
-import Image from "next/image";
+import { useState } from "react";
+import { Artwork } from "@/components/visual/artwork";
 import { Terminal, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 
 // Core capabilities array. Add any new capability label here anytime.
 const SHIP_LABELS: string[] = [
-  "gateway",
-  "memory",
-  "terminal execution",
-  "tool permissions",
-  "mcp",
-  "background task",
-  "skill",
+  "Multi-Gateway",
+  "Persistent-Memory",
+  "State",
+  "Context-Compression",
+  "Tool-Execution",
+  "Tool-Pruning",
+  "Permissions",
+  "Background-Tasks",
+  "Skills",
+  "SubAgents",
+  "MCP",
   "AGENTS.md",
+  "SOUL.md",
+  "Diff Preview",
   "Theming",
 ];
 
 interface CompactPlatform {
-  id: "windows" | "macos" | "linux" | "npm";
+  id: "windows" | "macos" | "linux" | "npm" | "pnpm";
   label: string;
   prompt: string;
   command: string;
@@ -47,14 +53,19 @@ const COMPACT_PLATFORMS: CompactPlatform[] = [
   },
   {
     id: "npm",
-    label: "Source",
+    label: "npm",
     prompt: "$",
-    command: "git clone https://github.com/hphucdev-04/cube.git && cd cube && pnpm install",
+    command: "npm install -g @cube-harness/cli",
+  },
+  {
+    id: "pnpm",
+    label: "pnpm",
+    prompt: "$",
+    command: "pnpm add -g @cube-harness/cli",
   },
 ];
 
 export function ShippingSection() {
-  const sectionRef = useRef<HTMLElement>(null);
   const [activePlatform, setActivePlatform] = useState<CompactPlatform["id"]>("windows");
   const [copied, setCopied] = useState(false);
 
@@ -70,22 +81,11 @@ export function ShippingSection() {
     }
   };
 
-  // Exactly like SubsystemCard: tracks when FAQ slides over this card
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end start"],
-  });
-
-  // Scale down to 0.94 and veil to 0.55 as FAQ slides over
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.94]);
-  const veilOpacity = useTransform(scrollYProgress, [0, 1], [0, 0.55]);
-
   return (
     <section
-      ref={sectionRef}
       id="ship"
       style={{ zIndex: 25 }}
-      className="sticky top-0 -mt-[100vh] h-screen w-full flex flex-col justify-center border-t border-[#3E3833]/80 bg-[#0A0908] overflow-hidden px-6 sm:px-12 md:px-20 lg:px-24 py-12 lg:py-16 shadow-[0_-30px_70px_rgba(0,0,0,0.98),0_-10px_25px_rgba(0,0,0,0.85)]"
+      className="relative min-h-[75svh] w-full flex flex-col justify-center border-t border-[#3E3833]/80 bg-[#0A0908] overflow-hidden px-6 sm:px-12 md:px-20 lg:px-24 py-24 lg:py-28 shadow-[0_-30px_70px_rgba(0,0,0,0.98),0_-10px_25px_rgba(0,0,0,0.85)]"
     >
       {/* Top hairline highlight for incoming architectural card */}
       <div
@@ -94,30 +94,25 @@ export function ShippingSection() {
       />
 
       {/* Receding depth wrapper: scales down as FAQ slides over */}
-      <motion.div
-        style={{ scale }}
-        className="relative w-full h-full flex flex-col justify-center origin-top will-change-transform"
+      <div
+        className="relative w-full flex flex-col justify-center"
       >
       {/* ── FULL-BLEED PIRANESI BACKDROP (ascii-magic-8.png) ────────── */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 select-none"
       >
-        <Image
+        <Artwork
           src="/assets/ascii-magic-8.png"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center contrast-[1.18] brightness-[0.70]"
+          className="object-cover object-center contrast-[1.18] brightness-[0.82]"
         />
         {/* Chiaroscuro: dark stone shadow on inscription side, open view on far side */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0A0908]/96 via-[#0A0908]/65 to-[#0A0908]/25" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0A0908]/80 via-transparent to-[#0A0908]/90" />
       </div>
 
-      <div className="relative z-10 w-full max-w-6xl mx-auto flex flex-col gap-10 lg:gap-14">
-        {/* ── UPPER PART: Everything you need to ship + Labels ────────── */}
+      <div className="reading-plane relative z-10 w-full max-w-6xl mx-auto flex flex-col gap-10 lg:gap-14">
+        {/* ── UPPER PART: Bring Cube into your workspace + Labels ────────── */}
         <div>
           {/* Eyebrow badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#141210]/90 border border-[#2A2622] text-xs font-mono mb-3 backdrop-blur-sm">
@@ -181,7 +176,7 @@ export function ShippingSection() {
                       setCopied(false);
                     }}
                     className={cn(
-                      "relative px-3.5 py-1 text-xs font-mono transition-colors cursor-pointer select-none",
+                      "relative min-h-11 px-3.5 py-1 text-xs font-mono transition-colors cursor-pointer select-none",
                       isSelected
                         ? "text-[#0A0908] font-semibold"
                         : "text-[#78716C] hover:text-[#D6D3D1] font-medium"
@@ -216,10 +211,10 @@ export function ShippingSection() {
                   type="button"
                   onClick={handleCopy}
                   className={cn(
-                    "shrink-0 flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-mono font-medium transition-all cursor-pointer select-none",
+                    "min-h-11 shrink-0 flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-mono font-medium transition-all cursor-pointer select-none",
                     copied
                       ? "bg-[#38BDF8] text-[#0A0908]"
-                      : "bg-[#141210] hover:bg-[#38BDF8] text-[#A8A29E] hover:text-[#0A0908] border border-[#2A2622] hover:border-transparent"
+                      : "bg-[#38BDF8] hover:bg-[#7DD3FC] text-[#0A0908] border border-transparent"
                   )}
                   title="Copy to clipboard"
                 >
@@ -240,13 +235,8 @@ export function ShippingSection() {
           </div>
         </div>
       </div>
-      </motion.div>
+      </div>
 
-      {/* Receding dark shadow veil when FAQ slides over */}
-      <motion.div
-        style={{ opacity: veilOpacity }}
-        className="pointer-events-none absolute inset-0 z-40 bg-[#0A0908]"
-      />
     </section>
   );
 }

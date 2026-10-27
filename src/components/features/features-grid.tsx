@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, type ReactNode } from "react";
-import Image from "next/image";
+import { Artwork } from "@/components/visual/artwork";
+import { useStickyViewport } from "@/lib/use-sticky-viewport";
 import {
   RotateCw,
   Wrench,
@@ -10,7 +11,6 @@ import {
   Activity,
   ShieldCheck,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 interface HarnessBay {
@@ -40,7 +40,7 @@ const HARNESS_BAYS: HarnessBay[] = [
     id: "context", roman: "II // CONTEXT", code: "II",
     name: "Context Management", archType: "Project Rules & Conversation Budget", icon: Layers,
     capability: "Scoped AGENTS.md Rules & Context Compaction",
-    bgAsset: "/assets/ascii-magic-4.png", bgFocus: "object-center",
+    bgAsset: "/assets/ascii-magic-5.png", bgFocus: "object-center",
     conceptSummary: "Load workspace and global AGENTS.md instructions, discover scoped rules as files are explored, and enable project or global skills. Context budgeting prunes older tool output and compacts conversation history while keeping tool exchanges together.",
     specs: ["AGENTS.md Discovery", "Scoped Instructions", "Skill Loading", "Context Compaction"],
   },
@@ -48,7 +48,7 @@ const HARNESS_BAYS: HarnessBay[] = [
     id: "tools", roman: "III // TOOLS & EXECUTION", code: "III",
     name: "File & Command Tools", archType: "Workspace IO & Host Commands", icon: Wrench,
     capability: "Targeted Edits, Patches & Process Control",
-    bgAsset: "/assets/ascii-magic-5.png", bgFocus: "object-center",
+    bgAsset: "/assets/ascii-magic-4.png", bgFocus: "object-center",
     conceptSummary: "Read and list files, make targeted text edits, or apply patches. File paths and command working directories stay within the workspace by default. Commands run on your host with configurable timeouts; tool permissions control approval.",
     specs: ["Text Edits & Patches", "Workspace Boundaries", "Host Shell", "Command Timeouts"],
   },
@@ -64,7 +64,7 @@ const HARNESS_BAYS: HarnessBay[] = [
     id: "guardrails", roman: "V // PERMISSIONS & SAFETY", code: "V",
     name: "Permissions & HITL", archType: "Workspace Trust & Tool Policies", icon: ShieldCheck,
     capability: "Allow, Ask or Deny Per Tool",
-    bgAsset: "/assets/ascii-magic-1.png", bgFocus: "object-top",
+    bgAsset: "/assets/ascii-magic-2.png", bgFocus: "object-top",
     conceptSummary: "Trust a workspace before starting. File writes, edits, patches, and shell commands ask for approval by default. Review file changes and use /permissions to configure tool policies, including connected MCP tools.",
     specs: ["Workspace Trust", "Diff Previews", "Tool Approval", "MCP Permissions"],
   },
@@ -72,7 +72,7 @@ const HARNESS_BAYS: HarnessBay[] = [
     id: "orchestration", roman: "VI // BACKGROUND TASKS", code: "VI",
     name: "Background Processes", archType: "Managed Commands & Runtime Events", icon: Activity,
     capability: "Run, Inspect & Stop Long-Running Commands",
-    bgAsset: "/assets/ascii-magic-2.png", bgFocus: "object-center",
+    bgAsset: "/assets/ascii-magic-1.png", bgFocus: "object-center",
     conceptSummary: "Run builds, tests, and other long-running commands in the background. Cube tracks process output and completion, limits concurrency, and reports status to the conversation. Use /tasks to inspect or stop managed processes.",
     specs: ["Background Commands", "Concurrency Limits", "Process Output", "/tasks Controls"],
   },
@@ -93,9 +93,9 @@ function SubsystemCard({
   total: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  useStickyViewport(ref);
   const Icon = bay.icon;
   const isEven = index % 2 === 0;
-  const isLast = index === total - 1;
 
   // Track scroll while this chamber is active at top of viewport
   const { scrollYProgress } = useScroll({
@@ -111,25 +111,17 @@ function SubsystemCard({
   return (
     <div
       ref={ref}
-      style={{ zIndex: 10 + index }}
-      className={cn(
-        "sticky top-0 h-screen w-full overflow-hidden flex items-center bg-[#0A0908]",
-        index > 0 && "border-t border-[#3E3833]/80 shadow-[0_-30px_70px_rgba(0,0,0,0.98),0_-10px_25px_rgba(0,0,0,0.85)]"
-      )}
+      style={{
+        zIndex: 10 + index,
+        maskImage: index > 0 ? "linear-gradient(to bottom, transparent, black 64px)" : undefined,
+      }}
+      className="harness-card w-full overflow-hidden flex items-center bg-[#0A0908]"
       aria-label={`${bay.roman}: ${bay.name}`}
     >
-      {/* Top hairline highlight for incoming architectural card */}
-      {index > 0 && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#78716C]/60 to-transparent z-20"
-        />
-      )}
-
       {/* Receding depth wrapper (scales down as card underneath) */}
       <motion.div
         style={{ scale }}
-        className="relative w-full h-full flex items-center origin-top will-change-transform"
+        className="harness-stage relative w-full flex items-center origin-top"
       >
         {/* ── FULL-BLEED PIRANESI BACKDROP ────────────────────────────
             The artwork IS the architectural space. Not an image in a box.
@@ -138,24 +130,20 @@ function SubsystemCard({
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 z-0 select-none"
         >
-          <Image
+          <Artwork
             src={bay.bgAsset}
-            alt=""
-            fill
-            sizes="100vw"
-            priority={index === 0}
-            className={`object-cover contrast-[1.15] brightness-[0.6] ${bay.bgFocus}`}
+            className={`object-cover contrast-[1.15] brightness-[0.78] ${bay.bgFocus}`}
           />
           {/* Chiaroscuro: heavy stone shadow on inscription side, open view on the far side */}
           {isEven ? (
             <>
               <div className="absolute inset-0 bg-gradient-to-r from-[#0A0908]/96 via-[#0A0908]/55 to-[#0A0908]/15" />
-              <div className="absolute inset-0 bg-gradient-to-b from-[#0A0908]/65 via-transparent to-[#0A0908]/80" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#0A0908] via-transparent to-[#0A0908]" />
             </>
           ) : (
             <>
               <div className="absolute inset-0 bg-gradient-to-l from-[#0A0908]/96 via-[#0A0908]/55 to-[#0A0908]/15" />
-              <div className="absolute inset-0 bg-gradient-to-b from-[#0A0908]/65 via-transparent to-[#0A0908]/80" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#0A0908] via-transparent to-[#0A0908]" />
             </>
           )}
         </div>
@@ -172,24 +160,24 @@ function SubsystemCard({
 
         {/* ── CONTENT: INSCRIPTION ON STONE ───────────────────────── */}
         <div
-          className={`relative z-10 w-full flex ${isEven ? "justify-start" : "justify-end"} px-6 sm:px-12 md:px-20 lg:px-28`}
+          className={`relative z-10 w-full flex ${isEven ? "justify-start" : "lg:justify-end"} px-6 sm:px-12 md:px-20 lg:px-24`}
         >
-          <div className={`max-w-[min(50rem,62vw)] w-full ${isEven ? "" : "text-right"}`}>
+          <div className={`reading-plane relative max-w-xl lg:max-w-[min(46rem,56vw)] w-full ${isEven ? "" : "lg:text-right"}`}>
 
             {/* Giant dim stone ordinal — Piranesi scale, limestone tone */}
             <div
               aria-hidden="true"
               className="font-cinzel font-bold text-[#F5F5F4]/[0.05] leading-none select-none mb-0 -mt-6"
-              style={{ fontSize: "clamp(8.5rem,22vw,16rem)" }}
+              style={{ fontSize: "clamp(5rem,18vw,13rem)" }}
             >
               {bay.code}
             </div>
 
             {/* Pier label — carved above the numeral */}
-            <div className={`-mt-[3.5rem] sm:-mt-[5rem] lg:-mt-[6.5rem] relative z-10 ${isEven ? "" : "flex flex-col items-end"}`}>
+            <div className={`-mt-6 sm:-mt-10 lg:-mt-14 relative z-10 ${isEven ? "" : "flex flex-col lg:items-end"}`}>
 
               {/* Roman label + arch type */}
-              <div className={`flex items-center gap-3 mb-3.5 ${isEven ? "" : "flex-row-reverse"}`}>
+              <div className={`flex items-center gap-3 mb-3.5 ${isEven ? "" : "lg:flex-row-reverse"}`}>
                 <div className="flex items-center justify-center w-8 h-8 border border-[#3E3833] bg-[#0A0908]/80 backdrop-blur-sm">
                   <Icon className="w-4 h-4 text-[#A8A29E]" />
                 </div>
@@ -197,7 +185,7 @@ function SubsystemCard({
                   <span className="font-cinzel text-xs sm:text-[13px] font-bold text-[#E7E5E4] tracking-[0.22em]">
                     {bay.roman}
                   </span>
-                  <span className="font-mono text-[11px] sm:text-xs text-[#78716C] ml-2.5">
+                  <span className="font-mono text-[11px] sm:text-xs text-[#A8A29E] block lg:inline lg:ml-2.5">
                     {bay.archType}
                   </span>
                 </div>
@@ -212,17 +200,17 @@ function SubsystemCard({
               </h3>
 
               {/* Capability — surveyor's note in mono, muted stone */}
-              <div className={`font-mono text-xs sm:text-[13px] text-[#A8A29E] mb-5 tracking-wide ${isEven ? "" : "text-right"}`}>
+              <div className={`font-mono text-xs sm:text-[13px] text-[#A8A29E] mb-5 tracking-wide ${isEven ? "" : "lg:text-right"}`}>
                 ├── {bay.capability}
               </div>
 
               {/* Summary — etched parchment text */}
-              <p className={`text-[#D6D3D1] font-serif leading-relaxed mb-6 text-sm sm:text-base lg:text-[1.08rem] ${isEven ? "" : "text-right"}`}>
+              <p className={`text-[#D6D3D1] font-serif leading-relaxed mb-6 text-base lg:text-[1.08rem] ${isEven ? "" : "lg:text-right"}`}>
                 {bay.conceptSummary}
               </p>
 
               {/* Spec tags — stone-tone mortar borders, no cyan */}
-              <div className={`flex flex-wrap gap-2 ${isEven ? "" : "justify-end"}`}>
+              <div className={`flex flex-wrap gap-2 ${isEven ? "" : "lg:justify-end"}`}>
                 {bay.specs.map((s) => (
                   <span
                     key={s}
@@ -242,7 +230,7 @@ function SubsystemCard({
           className="absolute bottom-4 left-6 sm:left-10 md:left-20 lg:left-24 z-10 font-mono text-[10px] text-[#3E3833] flex items-center gap-2"
         >
           <span className="w-4 h-px bg-[#3E3833]/60" />
-          <span>SUBSYSTEM {bay.code} // VI</span>
+          <span>SUBSYSTEM {bay.code}{" // VI"}</span>
           <span className="w-4 h-px bg-[#3E3833]/60" />
         </div>
 
@@ -262,7 +250,7 @@ function SubsystemCard({
         <motion.div
           style={{ opacity: veilOpacity }}
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-30 bg-[#0A0908]"
+          className="depth-veil pointer-events-none absolute inset-0 z-30 bg-[#0A0908]"
         />
       </motion.div>
     </div>
@@ -275,15 +263,48 @@ export function FeaturesGrid({ children }: { children?: ReactNode }) {
 
       {/* ── SECTION HEADER — entablature frieze ─────────────────── */}
       <div id="harness" className="relative w-full border-t border-b border-[#2A2622] bg-[#0A0908] px-6 sm:px-12 md:px-20 py-10 overflow-hidden">
-        {/* Etching crosshatch */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-40"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(45deg,rgba(255,255,255,0.015) 0px,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 9px),repeating-linear-gradient(-45deg,rgba(255,255,255,0.015) 0px,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 9px)",
-          }}
-        />
+        {/* ── AUTHENTIC PIRANESI ARCHITECTURAL DRAFTING BACKGROUND (SAME AS FAQ) ── */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 select-none overflow-hidden">
+          {/* Ambient technical cyan glow */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(56,189,248,0.04),transparent_75%)]" />
+
+          {/* Fine Acid Crosshatch Etching Texture */}
+          <div
+            className="absolute inset-0 opacity-80"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.032) 0px, rgba(255, 255, 255, 0.032) 1px, transparent 1px, transparent 7px), repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.032) 0px, rgba(255, 255, 255, 0.032) 1px, transparent 1px, transparent 7px)",
+            }}
+          />
+
+          {/* Architectural Surveyor Blueprint Grid with Crosshairs (Pure SVG) */}
+          <svg
+            className="absolute inset-0 w-full h-full opacity-40"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <pattern id="harnessArchitectGrid" width="64" height="64" patternUnits="userSpaceOnUse">
+                {/* Subtle grid lines */}
+                <path
+                  d="M 64 0 L 0 0 0 64"
+                  fill="none"
+                  stroke="#3E3833"
+                  strokeWidth="0.5"
+                  strokeDasharray="2 4"
+                  opacity="0.45"
+                />
+                {/* Surveyor crosshair at intersection (┼) */}
+                <path
+                  d="M -3 0 L 3 0 M 0 -3 L 0 3"
+                  stroke="#78716C"
+                  strokeWidth="0.75"
+                  opacity="0.6"
+                />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#harnessArchitectGrid)" />
+          </svg>
+        </div>
 
         <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6 max-w-7xl">
           <div>
@@ -298,14 +319,14 @@ export function FeaturesGrid({ children }: { children?: ReactNode }) {
               className="font-sans font-semibold tracking-tight text-[#F5F5F4] leading-[1.06]"
               style={{ fontSize: "clamp(1.8rem,4.5vw,3.5rem)" }}
             >
-              The Harness Engineering
+              Inside the Agent Harness
             </h2>
             <p className="mt-2 text-sm text-[#A8A29E] max-w-2xl font-serif">
-              Six runtime subsystems engineered to give the agent surgical precision across large production codebases.
+              Six runtime subsystems behind the coding loop, workspace context, tools, memory, permissions, and background commands.
             </p>
           </div>
 
-          <div className="shrink-0 flex flex-col items-end gap-1">
+          <div className="shrink-0 flex flex-col lg:items-end gap-1">
             <div className="text-xs font-mono text-[#A8A29E]">VI // RUNTIME SUBSYSTEMS</div>
             <div className="text-[10px] font-mono text-[#3E3833]">AUTONOMOUS AGENT HARNESS</div>
           </div>

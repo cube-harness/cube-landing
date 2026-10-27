@@ -25,7 +25,6 @@ export function CubeVoxelField() {
 
     let width = 0;
     let height = 0;
-    let animationFrameId = 0;
     let isVisible = true;
 
     let glyphs: AsciiGlyph[] = [];
@@ -120,7 +119,6 @@ export function CubeVoxelField() {
     return () => {
       window.removeEventListener("resize", handleResize);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
   }, []);
 

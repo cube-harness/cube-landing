@@ -1,6 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { ScrollProgress } from "@/components/layout/scroll-progress";
 import { CubeVoxelField } from "@/components/visual/cube-voxel-field";
 import { Navbar } from "@/components/layout/navbar";
 import { Hero } from "@/components/hero/hero";
@@ -11,20 +9,6 @@ import { FaqAccordion } from "@/components/faq/faq-accordion";
 import { Footer } from "@/components/layout/footer";
 
 export default function Home() {
-  const [scrollProgress, setScrollProgress] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = maxScroll > 0 ? scrollY / maxScroll : 0;
-      setScrollProgress(progress);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <div className="relative min-h-screen w-full bg-[#0A0908] text-[#F5F5F4] flex flex-col selection:bg-[#38BDF8]/30 selection:text-white overflow-x-clip">
       {/* Background Architectural Etching & Particles */}
@@ -40,10 +24,7 @@ export default function Home() {
         </div>
 
         {/* Dynamic Progress Indicator */}
-        <div className="flex flex-col items-center gap-1 font-mono text-[10px] text-[#F5F5F4]">
-          <span className="w-1.5 h-1.5 bg-[#38BDF8]" />
-          <span className="text-[#38BDF8] font-bold">{Math.round(scrollProgress * 100)}%</span>
-        </div>
+        <ScrollProgress />
 
         <div className="font-mono text-[9px] text-[#3E3833] tracking-widest rotate-180 [writing-mode:vertical-rl]">
           AUTONOMOUS ENGINE // 1:1
