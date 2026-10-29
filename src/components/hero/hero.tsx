@@ -87,7 +87,7 @@ export function Hero() {
             text-[clamp(1rem,1.4vw,1.1rem)]"
         >
           Read and edit code, run commands with approval, and keep context across sessions.
-          Choose OAuth, 15 API key providers, or local Ollama and LM Studio. Bring your own skills and MCP tools.
+          Choose OAuth, 15 API key providers, or local models.
         </motion.p>
 
         {/* CTA row */}
