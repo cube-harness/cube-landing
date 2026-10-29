@@ -75,7 +75,7 @@ export function Hero() {
           className="font-sans font-semibold tracking-tight text-[#F5F5F4] leading-[1.06] mb-4
             text-[clamp(2.2rem,6vw,4.5rem)]"
         >
-          A coding agent that lives<br className="hidden sm:block" /> where you already work
+          An agent harness that makes LLM agentic.
         </motion.h1>
 
         {/* Sub-headline */}
