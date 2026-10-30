@@ -30,6 +30,21 @@ npm install -g @cube-harness/cli
 pnpm add -g @cube-harness/cli
 ```
 
+<a id="install-with-ai"></a>
+
+## Install with Agent
+
+Copy the prompt below into an AI agent with terminal access to have it download and install Cube for you. If your AI cannot run commands, it can guide you through the installation instead.
+
+```text
+Install the latest Cube CLI on this machine using the official guide:
+https://cube-agent.pages.dev/docs/getting-started.md
+
+Detect my operating system and CPU architecture, then download and run the matching official installer from the guide. Use the installer's SHA-256 verification and preserve any existing Cube configuration and history.
+
+Check that the cube command is available, and help me fix PATH if needed. Then show me how to open my project directory, run cube, and complete the interactive workspace trust and gateway/model setup myself. If you cannot run terminal commands, give me the exact commands to run instead.
+```
+
 <a id="first-run"></a>
 
 ## First Run & Onboarding
@@ -49,7 +64,7 @@ cd /path/to/your/project
 cube
 ```
 
-![Cube startup screen](../../public/assets/getting-started.png)
+![Cube startup screen](/assets/getting-started.png)
 
 <a id="updates"></a>
 

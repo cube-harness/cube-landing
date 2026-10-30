@@ -75,7 +75,7 @@ export function Hero() {
           className="font-sans font-semibold tracking-tight text-[#F5F5F4] leading-[1.06] mb-4
             text-[clamp(2.2rem,6vw,4.5rem)]"
         >
-          A coding agent that lives<br className="hidden sm:block" /> where you already work
+          An agent harness that makes LLM agentic.
         </motion.h1>
 
         {/* Sub-headline */}
@@ -87,7 +87,7 @@ export function Hero() {
             text-[clamp(1rem,1.4vw,1.1rem)]"
         >
           Read and edit code, run commands with approval, and keep context across sessions.
-          Choose OAuth, 15 API key providers, or local Ollama and LM Studio. Bring your own skills and MCP tools.
+          Choose OAuth, 15 API key providers, or local models.
         </motion.p>
 
         {/* CTA row */}
