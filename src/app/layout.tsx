@@ -65,7 +65,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Cube — Agent Harness For LLMl",
+    title: "Cube — Agent Harness For LLM",
     description:
       "Read and edit code, run commands with approval, and resume sessions with local memory. Choose OAuth, API keys, or Ollama/LM Studio. Add skills and MCP tools.",
   },
@@ -79,6 +79,12 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://cube-agent.pages.dev/#website",
+      name: "Cube",
+      url: "https://cube-agent.pages.dev/",
+    },
     {
       "@type": "SoftwareApplication",
       "@id": "https://cube-agent.pages.dev/#software",
