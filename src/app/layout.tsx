@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     description:
       "Read and edit code, run commands with approval, and resume sessions with local memory. Choose OAuth, API keys, or Ollama/LM Studio. Add skills and MCP tools.",
     url: "https://cube-agent.pages.dev/",
-    siteName: "Cube",
+    siteName: "Cube Harness",
     type: "website",
     locale: "en_US",
   },
