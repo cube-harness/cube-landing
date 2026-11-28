@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     "Cube",
   ],
   authors: [{ name: "Hoai Phuc", url: "https://github.com/hphucdev-04"}],
-  creator: "Hoai Phuc (phuc.ph24012004@gmail.com)",
+  creator: "Hoai Phuc",
   alternates: { canonical: "/" },
   robots: {
     index: true,
@@ -82,13 +82,14 @@ const jsonLd = {
     {
       "@type": "WebSite",
       "@id": "https://cube-agent.pages.dev/#website",
-      name: "Cube",
+      name: "Cube Harness",
+      alternateName: "Cube Harness",
       url: "https://cube-agent.pages.dev/",
     },
     {
       "@type": "SoftwareApplication",
       "@id": "https://cube-agent.pages.dev/#software",
-      name: "Cube",
+      name: "Cube Harness",
       operatingSystem: "Windows x64, macOS arm64/x64, Linux x64",
       applicationCategory: "DeveloperApplication",
       description:
@@ -118,8 +119,7 @@ const jsonLd = {
       },
       author: {
         "@type": "Person",                                                                                                                   
-        "name": "Hoai Phuc",                                                                                              
-        "email": "mailto:phuc.ph24012004@gmail.com",                                                                                         
+        "name": "Hoai Phuc",                                                                                                                                                                                    
         "url": "https://github.com/hphucdev-04"    
       },
     },
